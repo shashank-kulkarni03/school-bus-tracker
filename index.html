@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bus Confirmation</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Hello, student!</h1>
+      <p class="question">Would you like to take the bus tomorrow?</p>
+
+      <div class="buttons">
+        <button id="yes" class="btn green">YES</button>
+        <button id="no" class="btn red">NO</button>
+      </div>
+
+      <button id="submitBtn" class="btn submit">SUBMIT</button>
+
+      <!-- Hidden fields for location -->
+      <input type="hidden" id="lat" />
+      <input type="hidden" id="lng" />
+    </div>
+
+    <!-- Firebase App (Core) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <!-- placeholder -->
+    <script src="script.js"></script>
+  </body>
+</html>

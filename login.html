@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <h2>🚌 School Bus Tracker</h2>
+      <p>Please login to continue</p>
+
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Enter Name" required />
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter Password"
+          required
+        />
+        <button type="submit" class="btn login-btn">Login</button>
+        <p id="error-msg" class="error"></p>
+      </form>
+    </div>
+
+    <!-- ✅ Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- ✅ Your Firebase config file -->
+    <script src="firebase-config.js"></script>
+
+    <!-- ✅ Your login logic -->
+    <script src="login.js"></script>
+  </body>
+</html>

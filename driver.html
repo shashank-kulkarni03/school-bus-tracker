@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Panel - School Bus Tracker</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Leaflet Routing Machine CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: Arial, sans-serif;
+      }
+
+      #map {
+        height: 100vh;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Your Firebase Config -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyDQPblcwF2QLWdXtM2Q8xdESzh4NOVSzP8",
+        authDomain: "school-bus-tracker-e6a1d.firebaseapp.com",
+        databaseURL:
+          "https://school-bus-tracker-e6a1d-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "school-bus-tracker-e6a1d",
+        storageBucket: "school-bus-tracker-e6a1d.firebasestorage.app",
+        messagingSenderId: "610506187838",
+        appId: "1:610506187838:web:c5e0988b8539d2baae9d6f",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <!-- Driver Panel Logic -->
+    <script src="driver.js"></script>
+  </body>
+</html>

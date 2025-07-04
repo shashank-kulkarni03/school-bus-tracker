@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        background: #e6f7ff;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .register-container {
+        max-width: 400px;
+        margin: 80px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .register-container h2 {
+        margin-bottom: 10px;
+        font-size: 24px;
+        color: #0077cc;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        margin: 12px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+
+      .btn {
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        background-color: #005fa3;
+      }
+
+      .error {
+        color: red;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .login-link {
+        margin-top: 15px;
+        display: block;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .login-link a {
+        color: #0077cc;
+        text-decoration: none;
+      }
+
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="register-container">
+      <h2>📝 Student Registration</h2>
+      <p>Create your account</p>
+
+      <form id="register-form">
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter Username"
+          required
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter Password"
+          required
+        />
+        <button type="submit" class="btn">Register</button>
+        <p id="error-msg" class="error"></p>
+      </form>
+
+      <!-- ✅ Login Link -->
+      <div class="login-link">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
+    </div>
+
+    <!-- Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="register.js"></script>
+  </body>
+</html>
