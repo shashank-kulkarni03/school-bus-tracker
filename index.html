@@ -6,8 +6,9 @@
   </head>
   <body>
     <div class="container">
-      <h1>Hello, student!</h1>
-      <p class="question">Would you like to take the bus tomorrow?</p>
+      <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
+      <h1 id="student-name">Hello, student!</h1>
+      <p class="question">Will you take the bus tomorrow?</p>
 
       <div class="buttons">
         <button id="yes" class="btn green">YES</button>
@@ -15,20 +16,22 @@
       </div>
 
       <button id="submitBtn" class="btn submit">SUBMIT</button>
+      <br />
+      <p style="font-size: 12px; color: gray; margin-top: 20px">
+        🔒 This is a demo project built for academic purposes only. No real data
+        is collected or used.
+      </p>
 
-      <!-- Hidden fields for location -->
+      <!-- hidden lat/lng fields -->
       <input type="hidden" id="lat" />
       <input type="hidden" id="lng" />
     </div>
 
-    <!-- Firebase App (Core) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <!-- Firebase Realtime Database -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <!-- Firebase Config -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="firebase-config.js"></script>
-
-    <!-- placeholder -->
     <script src="script.js"></script>
   </body>
 </html>
