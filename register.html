@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>Student Registration</title>
-    <link rel="stylesheet" href="style.css" />
     <style>
       body {
         background: #e6f7ff;
@@ -19,69 +18,61 @@
         text-align: center;
       }
 
-      .register-container h2 {
-        margin-bottom: 10px;
-        font-size: 24px;
+      h2 {
         color: #0077cc;
       }
 
-      input[type="text"],
-      input[type="password"] {
+      input {
         width: 100%;
         padding: 12px;
         margin: 12px 0;
-        border: 1px solid #ccc;
         border-radius: 8px;
+        border: 1px solid #ccc;
       }
 
       .btn {
-        background-color: #0077cc;
+        background: #0077cc;
         color: white;
+        padding: 12px;
         border: none;
-        padding: 12px 20px;
         border-radius: 8px;
-        cursor: pointer;
         width: 100%;
-        margin-top: 10px;
+        cursor: pointer;
       }
 
       .btn:hover {
-        background-color: #005fa3;
+        background: #005fa3;
       }
 
       .error {
         color: red;
-        font-size: 14px;
         margin-top: 10px;
+        font-size: 14px;
       }
 
       .login-link {
         margin-top: 15px;
-        display: block;
-        font-size: 14px;
-        color: #333;
       }
 
       .login-link a {
         color: #0077cc;
         text-decoration: none;
       }
-
-      .login-link a:hover {
-        text-decoration: underline;
-      }
     </style>
   </head>
   <body>
     <div class="register-container">
+      <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
       <h2>📝 Student Registration</h2>
       <p>Create your account</p>
 
       <form id="register-form">
+        <!-- ✅ Add name input -->
+        <input type="text" id="name" placeholder="Enter Full Name" required />
         <input
-          type="text"
+          type="email"
           id="username"
-          placeholder="Enter Username"
+          placeholder="Enter Email (e.g. student@gmail.com)"
           required
         />
         <input
@@ -94,14 +85,18 @@
         <p id="error-msg" class="error"></p>
       </form>
 
-      <!-- ✅ Login Link -->
       <div class="login-link">
         Already have an account? <a href="login.html">Login</a>
       </div>
+      <p style="font-size: 12px; color: gray; margin-top: 20px">
+        🔒 This is a demo project built for academic purposes only. No real data
+        is collected or used.
+      </p>
     </div>
 
-    <!-- Firebase scripts -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="firebase-config.js"></script>
     <script src="register.js"></script>
