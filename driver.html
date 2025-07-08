@@ -1,34 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
+    <title>Driver Panel - School Bus Route</title>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Driver Panel - School Bus Tracker</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-    <!-- Leaflet Routing Machine CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
     />
 
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
       html,
       body {
+        margin: 0;
+        padding: 0;
         height: 100%;
         font-family: Arial, sans-serif;
       }
-
       #map {
-        height: 100vh;
+        height: 100%;
         width: 100%;
       }
     </style>
@@ -36,37 +32,19 @@
   <body>
     <div id="map"></div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <!-- Leaflet Routing Machine JS -->
-    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <!-- Your Firebase Config -->
-    <script>
-      // TODO: Replace the placeholders with your actual Firebase config values.
-// Do NOT commit the actual values to GitHub.
+    <!-- Leaflet + Routing -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+    <!-- ✅ Working ORS Plugin (local file) -->
+    <script src="lrm-openrouteservice.min.js"></script>
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-    </script>
-
-    <!-- Driver Panel Logic -->
+    <!-- Firebase Config + Driver Logic -->
+    <script src="firebase-config.js"></script>
     <script src="driver.js"></script>
   </body>
 </html>
