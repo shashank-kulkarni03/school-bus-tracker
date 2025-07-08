@@ -1,32 +1,23 @@
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 document.getElementById("login-form").addEventListener("submit", function (e) {
   e.preventDefault();
 
-  const username = document
-    .getElementById("username")
-    .value.trim()
-    .toLowerCase();
+  const email = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
 
   firebase
-    .database()
-    .ref("users/" + username)
-    .once("value")
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        if (data.password === password) {
-          localStorage.setItem("studentName", username);
-          window.location.href = "index.html"; // Redirect after login
-        } else {
-          document.getElementById("error-msg").textContent =
-            "❌ Incorrect password";
-        }
-      } else {
-        document.getElementById("error-msg").textContent = "❌ User not found";
-      }
+    .auth()
+    .signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      localStorage.setItem("studentEmail", user.email);
+      window.location.href = "index.html";
     })
     .catch((error) => {
       console.error("Login error:", error);
-      document.getElementById("error-msg").textContent = "❌ Login failed";
+      document.getElementById("error-msg").textContent = "❌ " + error.message;
     });
 });
