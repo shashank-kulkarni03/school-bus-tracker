@@ -1,61 +1,71 @@
-// Initialize the Leaflet map
-const map = L.map("map").setView([20.5937, 78.9629], 5); // Default center on India
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-// Add OpenStreetMap tiles
+// Leaflet Map Setup
+const map = L.map("map").setView([12.9716, 77.5946], 13);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "© OpenStreetMap contributors",
+  attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-// Store marker and routing references
-let routingControl = null;
+// ORS API Key (Temporary Dev Key)
+const orsApiKey = "5b3ce3597851110001cf6248b8f1a748bbf743c44d20183a";
 
-// Fetch data from Firebase
+// Collect all student waypoints
+const waypoints = [];
+
+// Load student data from Firebase
 firebase
   .database()
   .ref("students")
-  .on("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+  .once("value")
+  .then((snapshot) => {
+    const students = snapshot.val();
+    if (!students) return;
 
-    // Clear existing route
-    if (routingControl) {
-      map.removeControl(routingControl);
-      routingControl = null;
-    }
+    for (const uid in students) {
+      const student = students[uid];
 
-    // Remove existing markers
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
-
-    const waypoints = [];
-
-    Object.values(data).forEach((student) => {
-      if (student.willTakeBus) {
+      // Check for valid data
+      if (
+        student.willTakeBus === true &&
+        typeof student.lat === "number" &&
+        typeof student.lng === "number"
+      ) {
         const latlng = L.latLng(student.lat, student.lng);
-        const marker = L.marker(latlng).addTo(map);
-        marker.bindPopup(
-          `<b>${student.name}</b><br>🟢 Will take the bus<br><small>${student.timestamp}</small>`
-        );
+
+        // Add marker
+        L.marker(latlng)
+          .addTo(map)
+          .bindPopup(`<b>${student.name}</b><br>${student.email || ""}`);
+
+        // Add to routing waypoints
         waypoints.push(latlng);
       }
-    });
+    }
 
+    // 🧭 Route only if 2+ points
     if (waypoints.length >= 2) {
-      routingControl = L.Routing.control({
+      L.Routing.control({
         waypoints: waypoints,
-        routeWhileDragging: false,
-        draggableWaypoints: false,
+        router: L.Routing.openrouteservice(orsApiKey), // ✅ OpenRouteService router
+        lineOptions: {
+          styles: [{ color: "#007bff", weight: 5 }],
+        },
+        createMarker: () => null, // Don't duplicate markers
         addWaypoints: false,
-        createMarker: () => null, // Hide route markers
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false,
       }).addTo(map);
+    } else if (waypoints.length === 1) {
+      map.setView(waypoints[0], 14);
+    } else {
+      alert("🚫 No students selected YES to take the bus.");
     }
-
-    // Auto-fit map view to markers
-    if (waypoints.length > 0) {
-      const bounds = L.latLngBounds(waypoints);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
+  })
+  .catch((err) => {
+    console.error("🔥 Firebase error:", err);
+    alert("Failed to load student data.");
   });
