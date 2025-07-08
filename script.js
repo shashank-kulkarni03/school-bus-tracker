@@ -1,103 +1,128 @@
 let willTakeBus = null;
 
-// Handle Yes/No button selection
-document.getElementById("yes").onclick = () => {
-  willTakeBus = true;
-  highlightSelection("yes");
-};
-document.getElementById("no").onclick = () => {
-  willTakeBus = false;
-  highlightSelection("no");
-};
-
+// Highlight selected button
 function highlightSelection(selectedId) {
   document.getElementById("yes").style.opacity = selectedId === "yes" ? 1 : 0.5;
   document.getElementById("no").style.opacity = selectedId === "no" ? 1 : 0.5;
 }
 
-// Auto-detect location
-window.onload = function () {
+// Handle YES/NO clicks
+document.getElementById("yes").onclick = () => {
+  willTakeBus = true;
+  highlightSelection("yes");
+};
+
+document.getElementById("no").onclick = () => {
+  willTakeBus = false;
+  highlightSelection("no");
+};
+
+// On page load
+window.onload = () => {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    // Fetch student name for greeting
+    firebase
+      .database()
+      .ref("students/" + user.uid)
+      .once("value")
+      .then((snapshot) => {
+        const student = snapshot.val();
+        if (student && student.name) {
+          document.getElementById(
+            "student-name"
+          ).textContent = `Hello, ${student.name}!`;
+        } else {
+          document.getElementById("student-name").textContent =
+            "Hello, student!";
+        }
+      });
+  });
+
+  // Get current geolocation
   if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        document.getElementById("lat").value = pos.coords.latitude;
-        document.getElementById("lng").value = pos.coords.longitude;
-        console.log("📍 Location auto-detected.");
-      },
-      (err) => console.error("🚫 Location access denied.")
-    );
+    navigator.geolocation.getCurrentPosition((position) => {
+      document.getElementById("lat").value = position.coords.latitude;
+      document.getElementById("lng").value = position.coords.longitude;
+    });
   }
 };
 
-// Submit button logic
+// Handle SUBMIT
 document.getElementById("submitBtn").onclick = () => {
-  const now = new Date();
+  const user = firebase.auth().currentUser;
 
-  // Accurate IST conversion using timeZone
-  const formatter = new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-
-  const [hourStr, minuteStr] = formatter.format(now).split(":");
-  const hours = parseInt(hourStr, 10);
-  const minutes = parseInt(minuteStr, 10);
-  const totalMinutes = hours * 60 + minutes;
-
-  console.log(`🕒 IST Time: ${hours}:${minutes} (${totalMinutes} mins)`);
-
-  // Allow only between 4:30 PM (990) to 11:59 PM (1439)
-  if (totalMinutes < 990 || totalMinutes > 1439) {
-    alert("⛔ Submission allowed only between 4:30 PM and 11:59 PM IST.");
+  if (!user) {
+    alert("User not logged in.");
     return;
   }
-
-  const lat = document.getElementById("lat").value;
-  const lng = document.getElementById("lng").value;
 
   if (willTakeBus === null) {
-    alert("⚠️ Please select YES or NO.");
+    alert("Please select YES or NO.");
     return;
   }
 
-  const studentName =
-    localStorage.getItem("studentName") ||
-    prompt("Enter your name:").toLowerCase().trim();
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lng = parseFloat(document.getElementById("lng").value);
 
-  if (!studentName) {
-    alert("⚠️ Name is required.");
+  // Validate time (IST: 4:30 PM to 11:59 PM)
+  const now = new Date();
+  const [hours, minutes] = new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata",
+    hour12: false,
+  })
+    .format(now)
+    .split(":")
+    .map(Number);
+
+  const totalMins = hours * 60 + minutes;
+  if (totalMins < 990 || totalMins > 1439) {
+    alert("⛔ Submission allowed only from 4:30 PM to 11:59 PM IST.");
     return;
   }
 
-  const studentData = {
-    name: studentName,
-    lat: parseFloat(lat),
-    lng: parseFloat(lng),
-    willTakeBus,
-    timestamp: getCurrentISTTimestamp(),
-  };
-
-  // Send data to Firebase
+  // Fetch student info from DB
   firebase
     .database()
-    .ref("students/" + studentName)
-    .set(studentData)
+    .ref("students/" + user.uid)
+    .once("value")
+    .then((snapshot) => {
+      const student = snapshot.val() || {}; // fallback to empty object
+
+      const data = {
+        name: student.name ?? "Unknown",
+        email: student.email ?? "unknown@email.com",
+        lat,
+        lng,
+        willTakeBus,
+        timestamp: getCurrentIST(),
+      };
+
+      console.log("Submitting data to Firebase:", data);
+
+      return firebase
+        .database()
+        .ref("students/" + user.uid)
+        .update(data);
+    })
     .then(() => {
       alert("✅ Your response has been submitted!");
-      console.log("📤 Submitted Data:", studentData);
     })
-    .catch((error) => {
-      console.error("❌ Firebase error:", error);
-      alert("Something went wrong. Please try again.");
+    .catch((err) => {
+      console.error("❌ Firebase write error:", err);
+      alert("❌ Failed to submit data. See console for details.");
     });
 };
 
-// Get formatted IST timestamp
-function getCurrentISTTimestamp() {
-  const now = new Date();
-  const options = {
+// Format timestamp in IST
+function getCurrentIST() {
+  return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
     year: "numeric",
     month: "2-digit",
@@ -106,6 +131,5 @@ function getCurrentISTTimestamp() {
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
-  };
-  return new Intl.DateTimeFormat("en-IN", options).format(now);
+  }).format(new Date());
 }
