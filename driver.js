@@ -10,7 +10,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 
 // ORS API Key (Temporary Dev Key)
-const orsApiKey = "5b3ce3597851110001cf6248b8f1a748bbf743c44d20183a";
+const orsApiKey = "ORS_API_KEY";
 
 // Collect all student waypoints
 const waypoints = [];
