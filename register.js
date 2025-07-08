@@ -1,35 +1,55 @@
-// Make sure Firebase is initialized
+// Initialize Firebase if not already initialized
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-document
-  .getElementById("register-form")
-  .addEventListener("submit", function (e) {
-    e.preventDefault();
+// Initialize the Leaflet map
+const map = L.map("map").setView([12.9716, 77.5946], 13); // Default center
 
-    const username = document.getElementById("username")?.value?.trim();
-    const password = document.getElementById("password")?.value?.trim();
+// Add tile layer (OpenStreetMap)
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap contributors",
+}).addTo(map);
 
-    if (!username || !password) {
-      document.getElementById("error-msg").textContent =
-        "All fields are required.";
+// Load students from Firebase and show markers
+firebase
+  .database()
+  .ref("students")
+  .once("value")
+  .then((snapshot) => {
+    const students = snapshot.val();
+
+    if (!students) {
+      alert("❌ No students found in database.");
       return;
     }
 
-    const sanitizedUsername = username.replace(/\./g, "_"); // Firebase keys can't contain "."
+    let bounds = [];
 
-    firebase
-      .database()
-      .ref("users/" + sanitizedUsername)
-      .set({ password })
-      .then(() => {
-        alert("✅ Registration successful!");
-        window.location.href = "login.html";
-      })
-      .catch((error) => {
-        console.error("❌ Error saving user:", error);
-        document.getElementById("error-msg").textContent =
-          "Registration failed.";
-      });
+    for (const uid in students) {
+      const student = students[uid];
+
+      if (
+        student.willTakeBus === true &&
+        typeof student.lat === "number" &&
+        typeof student.lng === "number"
+      ) {
+        const marker = L.marker([student.lat, student.lng])
+          .addTo(map)
+          .bindPopup(`<b>${student.name}</b><br>${student.email || ""}`);
+
+        bounds.push([student.lat, student.lng]);
+      }
+    }
+
+    // Adjust map to fit all markers
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [30, 30] });
+    } else {
+      alert("🚫 No students selected 'YES' to take the bus.");
+    }
+  })
+  .catch((err) => {
+    console.error("🔥 Firebase error:", err);
+    alert("Failed to load student data.");
   });
