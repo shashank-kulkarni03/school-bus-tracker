@@ -45,6 +45,11 @@
 
     <!-- Firebase Config + Driver Logic -->
     <script src="firebase-config.js"></script>
+    <script>
+  // ORS API key will be injected by Netlify at build time
+  window.ORS_API_KEY = "{{ORS_API_KEY}}";
+</script>
+
     <script src="driver.js"></script>
   </body>
 </html>
