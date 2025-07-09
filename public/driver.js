@@ -1,82 +1,65 @@
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+// Initialize the Leaflet map
+const map = L.map("map").setView([20.5937, 78.9629], 5); // Center on India
 
-const map = L.map("map").setView([13.0, 77.5], 8);
+// Add OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors",
+  attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-const waypoints = [];
+// Store routing reference
+let routingControl = null;
 
+// Fetch student data from Firebase
 firebase
   .database()
   .ref("students")
-  .once("value")
-  .then((snapshot) => {
-    const students = snapshot.val();
-    console.log("📦 All student data:", students);
+  .on("value", (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
 
-    if (!students) {
-      alert("❌ No student data found.");
-      return;
+    // Remove existing routes
+    if (routingControl) {
+      map.removeControl(routingControl);
+      routingControl = null;
     }
 
-    let count = 0;
+    // Remove old markers
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
 
-    for (const uid in students) {
-      const student = students[uid];
-      console.log(`🔍 UID: ${uid}`, student);
+    const waypoints = [];
 
-      const valid =
-        student &&
-        student.willTakeBus === true &&
+    for (const uid in data) {
+      const student = data[uid];
+      if (
+        student.willTakeBus &&
         typeof student.lat === "number" &&
-        typeof student.lng === "number";
-
-      if (valid) {
+        typeof student.lng === "number"
+      ) {
         const latlng = L.latLng(student.lat, student.lng);
         L.marker(latlng)
           .addTo(map)
-          .bindPopup(`<b>${student.name}</b><br>${student.email || ""}`);
+          .bindPopup(
+            `<b>${student.name}</b><br>${student.email || ""}<br><small>${
+              student.timestamp
+            }</small>`
+          );
         waypoints.push(latlng);
-        console.log(`✅ Added: ${student.name}`);
-        count++;
-      } else {
-        console.warn(`⛔️ Skipped: ${student.name || uid}`, {
-          willTakeBus: student.willTakeBus,
-          lat: student.lat,
-          lng: student.lng,
-          typeofLat: typeof student.lat,
-          typeofLng: typeof student.lng,
-        });
       }
     }
 
-    console.log(`📍 Total students added to map: ${count}`);
-
     if (waypoints.length >= 2) {
-      L.Routing.control({
+      routingControl = L.Routing.control({
         waypoints: waypoints,
-        router: L.Routing.osrmv1({
-          serviceUrl: "https://router.project-osrm.org/route/v1",
-        }),
-        lineOptions: {
-          styles: [{ color: "#007bff", weight: 5 }],
-        },
-        createMarker: () => null,
-        addWaypoints: false,
+        routeWhileDragging: false,
         draggableWaypoints: false,
-        fitSelectedRoutes: true,
-        show: false,
+        addWaypoints: false,
+        createMarker: () => null, // prevent extra markers
       }).addTo(map);
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);
-    } else {
-      alert("🚫 No eligible students found.");
     }
-  })
-  .catch((err) => {
-    console.error("🔥 Firebase load error:", err);
-    alert("Something went wrong while loading student data.");
   });
