@@ -9,9 +9,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-// ORS API Key (Temporary Dev Key)
-const orsApiKey = "5b3ce3597851110001cf6248b8f1a748bbf743c44d20183a";
-
 // Collect all student waypoints
 const waypoints = [];
 
@@ -27,7 +24,7 @@ firebase
     for (const uid in students) {
       const student = students[uid];
 
-      // Check for valid data
+      // Check for valid lat/lng and if they want to take bus
       if (
         student.willTakeBus === true &&
         typeof student.lat === "number" &&
@@ -35,25 +32,27 @@ firebase
       ) {
         const latlng = L.latLng(student.lat, student.lng);
 
-        // Add marker
+        // Add marker for student
         L.marker(latlng)
           .addTo(map)
           .bindPopup(`<b>${student.name}</b><br>${student.email || ""}`);
 
-        // Add to routing waypoints
+        // Add to route
         waypoints.push(latlng);
       }
     }
 
-    // 🧭 Route only if 2+ points
+    // Draw route if 2+ students
     if (waypoints.length >= 2) {
       L.Routing.control({
         waypoints: waypoints,
-        router: L.Routing.openrouteservice(orsApiKey), // ✅ OpenRouteService router
+        router: L.Routing.osrmv1({
+          serviceUrl: "https://router.project-osrm.org/route/v1",
+        }),
         lineOptions: {
           styles: [{ color: "#007bff", weight: 5 }],
         },
-        createMarker: () => null, // Don't duplicate markers
+        createMarker: () => null,
         addWaypoints: false,
         draggableWaypoints: false,
         fitSelectedRoutes: true,
