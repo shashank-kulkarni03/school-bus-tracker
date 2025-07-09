@@ -1,29 +1,26 @@
-// Initialize the Leaflet map
-const map = L.map("map").setView([20.5937, 78.9629], 5); // Center on India
+// Initialize map
+const map = L.map("map").setView([13.1, 77.6], 13); // Default center
 
 // Add OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-// Store routing reference
 let routingControl = null;
 
-// Fetch student data from Firebase
 firebase
   .database()
   .ref("students")
   .on("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+    const students = snapshot.val();
+    if (!students) return;
 
-    // Remove existing routes
+    // Clear old routes and markers
     if (routingControl) {
       map.removeControl(routingControl);
       routingControl = null;
     }
 
-    // Remove old markers
     map.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
         map.removeLayer(layer);
@@ -32,8 +29,9 @@ firebase
 
     const waypoints = [];
 
-    for (const uid in data) {
-      const student = data[uid];
+    for (const uid in students) {
+      const student = students[uid];
+
       if (
         student.willTakeBus &&
         typeof student.lat === "number" &&
@@ -47,17 +45,23 @@ firebase
               student.timestamp
             }</small>`
           );
+
         waypoints.push(latlng);
+        console.log(`✅ Added: ${student.name}`);
+      } else {
+        console.log(`⛔ Skipping student: ${student.name}`);
       }
     }
+
+    console.log("📍 Total students added to map:", waypoints.length);
 
     if (waypoints.length >= 2) {
       routingControl = L.Routing.control({
         waypoints: waypoints,
         routeWhileDragging: false,
-        draggableWaypoints: false,
+        createMarker: () => null,
         addWaypoints: false,
-        createMarker: () => null, // prevent extra markers
+        draggableWaypoints: false,
       }).addTo(map);
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);

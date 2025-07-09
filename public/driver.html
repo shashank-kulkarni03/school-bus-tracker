@@ -8,7 +8,7 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-    <!-- Leaflet Routing Machine CSS -->
+    <!-- Routing Machine CSS -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
@@ -16,15 +16,12 @@
 
     <style>
       html,
-      body {
+      body,
+      #map {
+        height: 100%;
         margin: 0;
         padding: 0;
-        height: 100%;
-      }
-
-      #map {
-        height: 100vh;
-        width: 100%;
+        font-family: Arial, sans-serif;
       }
     </style>
   </head>
@@ -34,7 +31,7 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Routing Machine -->
+    <!-- Leaflet Routing Machine JS -->
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
     <!-- Firebase SDK -->
@@ -53,11 +50,10 @@
         messagingSenderId: "610506187838",
         appId: "1:610506187838:web:c5e0988b8539d2baae9d6f",
       };
-
       firebase.initializeApp(firebaseConfig);
     </script>
 
-    <!-- Your App Logic -->
+    <!-- Your Driver Panel Logic -->
     <script src="driver.js"></script>
   </body>
 </html>
