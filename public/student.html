@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Bus Confirmation | XYZ PUBLIC SCHOOL</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>XYZ PUBLIC SCHOOL</h1>
+      <h2 id="student-name">Hello, student!</h2>
+      <p class="question">Will you take the bus tomorrow?</p>
+
+      <div class="buttons">
+        <button id="yes" class="btn green">YES</button>
+        <button id="no" class="btn red">NO</button>
+      </div>
+
+      <button id="submitBtn" class="btn submit">SUBMIT</button>
+
+      <!-- hidden location fields -->
+      <input type="hidden" id="lat" />
+      <input type="hidden" id="lng" />
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
