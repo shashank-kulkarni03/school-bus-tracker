@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Panel - School Bus Tracker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #f9f9f9;
+      }
+
+      header {
+        background: #007bff;
+        color: white;
+        padding: 1rem;
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      #calendar {
+        max-width: 900px;
+        margin: 20px auto;
+      }
+
+      #status-container {
+        margin: 40px auto;
+        max-width: 900px;
+        padding: 20px;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.5s ease-in-out;
+      }
+
+      .student-list {
+        display: none;
+        margin-top: 20px;
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .print-btn {
+        background: #28a745;
+        color: white;
+      }
+
+      .close-btn {
+        background: #dc3545;
+        color: white;
+      }
+
+      #detail-link {
+        color: #007bff;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <header>📅 Admin Panel - School Bus Tracker</header>
+
+    <div id="calendar"></div>
+
+    <div id="status-container">
+      <h3>Status for: <span id="selected-date">No date selected</span></h3>
+      <p>Total students who opted for bus: <span id="total-count">0</span></p>
+      <span id="detail-link">📄 View Details</span>
+
+      <div class="student-list" id="student-list">
+        <ul id="student-names"></ul>
+        <div class="actions">
+          <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+          <button
+            class="close-btn"
+            onclick="document.getElementById('student-list').style.display='none'"
+          >
+            ❌ Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

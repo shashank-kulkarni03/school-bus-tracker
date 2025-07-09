@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student Registration</title>
+    <style>
+      body {
+        background: #e6f7ff;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .register-container {
+        max-width: 400px;
+        margin: 80px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h2 {
+        color: #0077cc;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        margin: 12px 0;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+      }
+
+      .btn {
+        background: #0077cc;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        width: 100%;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: #005fa3;
+      }
+
+      .error {
+        color: red;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .login-link {
+        margin-top: 15px;
+      }
+
+      .login-link a {
+        color: #0077cc;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="register-container">
+      <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
+      <h2>📝 Student Registration</h2>
+      <p>Create your account</p>
+
+      <form id="register-form">
+        <!-- ✅ Add name input -->
+        <input type="text" id="name" placeholder="Enter Full Name" required />
+        <input
+          type="email"
+          id="username"
+          placeholder="Enter Email (e.g. student@gmail.com)"
+          required
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter Password"
+          required
+        />
+        <button type="submit" class="btn">Register</button>
+        <p id="error-msg" class="error"></p>
+      </form>
+
+      <div class="login-link">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
+      <p style="font-size: 12px; color: gray; margin-top: 20px">
+        🔒 This is a demo project built for academic purposes only. No real data
+        is collected or used.
+      </p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="register.js"></script>
+  </body>
+</html>

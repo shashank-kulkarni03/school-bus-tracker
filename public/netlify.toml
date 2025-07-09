@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/register.html"
+  status = 200
