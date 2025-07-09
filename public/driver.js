@@ -1,69 +1,71 @@
-// Initialize map
-const map = L.map("map").setView([13.1, 77.6], 13); // Default center
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+// Initialize Leaflet map
+const map = L.map("map").setView([20.5937, 78.9629], 5); // Default: India
 
 // Add OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-let routingControl = null;
+// 🧠 Helper to extract nested values like { Value: 13.1 }
+function extractValue(input) {
+  return typeof input === "object" && input !== null && "Value" in input
+    ? input.Value
+    : input;
+}
 
+const waypoints = [];
+
+// Load student data
 firebase
   .database()
   .ref("students")
-  .on("value", (snapshot) => {
+  .once("value")
+  .then((snapshot) => {
     const students = snapshot.val();
     if (!students) return;
 
-    // Clear old routes and markers
-    if (routingControl) {
-      map.removeControl(routingControl);
-      routingControl = null;
-    }
-
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
-
-    const waypoints = [];
+    console.log("📦 All student data:", students);
 
     for (const uid in students) {
       const student = students[uid];
+      console.log("🔍 UID:", uid, student);
 
-      if (
-        student.willTakeBus &&
-        typeof student.lat === "number" &&
-        typeof student.lng === "number"
-      ) {
-        const latlng = L.latLng(student.lat, student.lng);
+      const willTakeBus = extractValue(student.willTakeBus);
+      const lat = extractValue(student.lat);
+      const lng = extractValue(student.lng);
+
+      if (willTakeBus && typeof lat === "number" && typeof lng === "number") {
+        console.log("✅ Added:", student.name);
+        const latlng = L.latLng(lat, lng);
         L.marker(latlng)
           .addTo(map)
-          .bindPopup(
-            `<b>${student.name}</b><br>${student.email || ""}<br><small>${
-              student.timestamp
-            }</small>`
-          );
-
+          .bindPopup(`<b>${student.name}</b><br>${student.email || ""}`);
         waypoints.push(latlng);
-        console.log(`✅ Added: ${student.name}`);
-      } else {
-        console.log(`⛔ Skipping student: ${student.name}`);
       }
     }
 
     console.log("📍 Total students added to map:", waypoints.length);
 
     if (waypoints.length >= 2) {
-      routingControl = L.Routing.control({
+      L.Routing.control({
         waypoints: waypoints,
         routeWhileDragging: false,
-        createMarker: () => null,
-        addWaypoints: false,
         draggableWaypoints: false,
+        addWaypoints: false,
+        createMarker: () => null,
       }).addTo(map);
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);
+    } else {
+      alert("🚫 No students selected YES to take the bus.");
     }
+  })
+  .catch((err) => {
+    console.error("🔥 Firebase error:", err);
+    alert("Failed to load student data.");
   });
