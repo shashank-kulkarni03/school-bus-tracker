@@ -2,8 +2,6 @@
 <html>
   <head>
     <title>Student Registration</title>
-
-    <!-- ✅ Styles -->
     <style>
       body {
         background: #e6f7ff;
@@ -12,7 +10,7 @@
 
       .register-container {
         max-width: 400px;
-        margin: 80px auto;
+        margin: 40px auto;
         padding: 30px;
         background: #fff;
         border-radius: 12px;
@@ -60,9 +58,16 @@
         color: #0077cc;
         text-decoration: none;
       }
+
+      #map {
+        height: 300px;
+        margin-top: 20px;
+        display: none;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+      }
     </style>
 
-    <!-- ✅ Leaflet CSS + JS -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -90,6 +95,22 @@
           placeholder="Enter Password"
           required
         />
+
+        <!-- Location Fields -->
+        <input type="hidden" id="lat" name="lat" />
+        <input type="hidden" id="lng" name="lng" />
+
+        <button
+          type="button"
+          class="btn"
+          onclick="getLocation()"
+          style="margin-bottom: 10px"
+        >
+          📍 Use My Location
+        </button>
+
+        <div id="map"></div>
+
         <button type="submit" class="btn">Register</button>
         <p id="error-msg" class="error"></p>
       </form>
@@ -103,9 +124,7 @@
         is collected or used.
       </p>
     </div>
-    <div id="map" style="display: none"></div>
 
-    <!-- ✅ Firebase + App Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
