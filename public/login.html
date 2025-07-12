@@ -1,29 +1,44 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Student Login</title>
+    <title>Login - School Bus Tracker</title>
     <style>
       body {
-        background: #f0f8ff;
         font-family: "Segoe UI", sans-serif;
+        background-color: #eaf4ff;
+        color: #333;
       }
 
       .login-container {
         max-width: 400px;
-        margin: 100px auto;
+        margin: 80px auto;
         padding: 30px;
-        background: white;
+        background: #fff;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         text-align: center;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 6px;
+        color: #222;
+      }
+
+      h2 {
+        font-size: 18px;
+        color: #0077cc;
+        margin-bottom: 8px;
       }
 
       input {
         width: 100%;
         padding: 12px;
         margin: 12px 0;
-        border: 1px solid #ccc;
         border-radius: 8px;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        color: #333;
       }
 
       .btn {
@@ -34,10 +49,37 @@
         border-radius: 8px;
         width: 100%;
         cursor: pointer;
+        margin-top: 10px;
       }
 
       .btn:hover {
         background: #005fa3;
+      }
+
+      .role-options {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        gap: 10px;
+      }
+
+      .role-option {
+        cursor: pointer;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid #0077cc;
+        color: #0077cc;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .role-option:hover {
+        background-color: #d0e9ff;
+      }
+
+      .role-option.selected {
+        background-color: #0077cc;
+        color: white;
       }
 
       .error {
@@ -45,34 +87,44 @@
         font-size: 14px;
         margin-top: 10px;
       }
+
+      .footer-note {
+        font-size: 12px;
+        color: gray;
+        margin-top: 15px;
+      }
     </style>
   </head>
+
   <body>
     <div class="login-container">
       <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
       <h2>🚌 School Bus Tracker</h2>
-      <p>Please login to continue</p>
+      <p style="margin-bottom: 6px; font-size: 16px;"><h3>LOGIN</h3></p>
+
+      <div class="role-options">
+        <div class="role-option selected" data-role="student">Student</div>
+        <div class="role-option" data-role="admin">Admin</div>
+        <div class="role-option" data-role="driver">Driver</div>
+      </div>
 
       <form id="login-form">
-        <input type="email" id="username" placeholder="Enter Email" required />
-        <input
-          type="password"
-          id="password"
-          placeholder="Enter Password"
-          required
-        />
+        <input type="email" id="email" placeholder="Enter Email" required />
+        <input type="password" id="password" placeholder="Enter Password" required />
+        <input type="hidden" id="role" value="student" />
         <button type="submit" class="btn">Login</button>
         <p id="error-msg" class="error"></p>
       </form>
-      <p style="font-size: 12px; color: gray; margin-top: 20px">
-        🔒 This is a demo project built for academic purposes only. No real data
-        is collected or used.
+
+      <p class="footer-note">
+        🔒 This is a demo project built for academic purposes only. No real data is collected or used.
       </p>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="firebase-config.js"></script>
     <script src="login.js"></script>
   </body>
