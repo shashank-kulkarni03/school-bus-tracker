@@ -1,14 +1,93 @@
-// Handle role selection
+// Role selector
 document.querySelectorAll(".role-option").forEach((btn) => {
   btn.addEventListener("click", function () {
     document
       .querySelectorAll(".role-option")
       .forEach((el) => el.classList.remove("selected"));
     this.classList.add("selected");
-    document.getElementById("role").value = this.getAttribute("data-role");
+    const selectedRole = this.getAttribute("data-role");
+    document.getElementById("role").value = selectedRole;
+
+    // Toggle location input buttons
+    const locBtn = document.getElementById("use-location-btn");
+    const confirmBtn = document.getElementById("confirm-location-btn");
+    const map = document.getElementById("map");
+
+    if (selectedRole === "student") {
+      locBtn.style.display = "block";
+    } else {
+      locBtn.style.display = "none";
+      confirmBtn.style.display = "none";
+      map.style.display = "none";
+      document.getElementById("lat").value = "";
+      document.getElementById("lng").value = "";
+    }
   });
 });
 
+// Use My Location + map
+let leafletMap = null;
+let marker = null;
+
+document
+  .getElementById("use-location-btn")
+  .addEventListener("click", function () {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        const mapDiv = document.getElementById("map");
+        mapDiv.style.display = "block";
+        document.getElementById("confirm-location-btn").style.display =
+          "inline-block";
+
+        if (!leafletMap) {
+          leafletMap = L.map("map").setView([lat, lng], 15);
+          L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          ).addTo(leafletMap);
+          leafletMap.on("click", function (e) {
+            const { lat, lng } = e.latlng;
+            marker.setLatLng([lat, lng]);
+          });
+        } else {
+          leafletMap.setView([lat, lng], 15);
+        }
+
+        if (!marker) {
+          marker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+        } else {
+          marker.setLatLng([lat, lng]);
+        }
+
+        alert(
+          "Drag the marker or click on the map to confirm your location. Then press 'Confirm Location'."
+        );
+      },
+      (err) => {
+        console.error("Location error:", err);
+        alert("Failed to get location.");
+      }
+    );
+  });
+
+// Confirm Location
+document
+  .getElementById("confirm-location-btn")
+  .addEventListener("click", function () {
+    if (marker) {
+      const confirmedLat = marker.getLatLng().lat;
+      const confirmedLng = marker.getLatLng().lng;
+
+      document.getElementById("lat").value = confirmedLat;
+      document.getElementById("lng").value = confirmedLng;
+
+      alert("✅ Location confirmed successfully.");
+    }
+  });
+
+// Register Submit
 document
   .getElementById("register-form")
   .addEventListener("submit", function (e) {
@@ -18,6 +97,8 @@ document
     const email = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
     const selectedRole = document.getElementById("role").value;
+    const lat = document.getElementById("lat").value;
+    const lng = document.getElementById("lng").value;
     const errorMsg = document.getElementById("error-msg");
 
     errorMsg.textContent = "";
@@ -27,24 +108,32 @@ document
       return;
     }
 
+    if (selectedRole === "student" && (!lat || !lng)) {
+      errorMsg.textContent = "Please use and confirm your location.";
+      return;
+    }
+
     firebase
       .auth()
       .createUserWithEmailAndPassword(email, password)
       .then((userCredential) => {
         const user = userCredential.user;
 
-        // Save to role-wise DB path
-        firebase.database().ref(`${selectedRole}s/${user.uid}`).set({
+        const userData = {
           uid: user.uid,
-          name: name,
-          email: email,
+          name,
+          email,
           role: selectedRole,
-          lat: null,
-          lng: null,
           timestamp: new Date().toISOString(),
-        });
+        };
 
-        // Redirect after registration
+        if (selectedRole === "student") {
+          userData.lat = parseFloat(lat);
+          userData.lng = parseFloat(lng);
+          userData.willTakeBus = null;
+        }
+
+        firebase.database().ref(`${selectedRole}s/${user.uid}`).set(userData);
         window.location.href = "login.html";
       })
       .catch((error) => {

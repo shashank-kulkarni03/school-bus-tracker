@@ -93,15 +93,30 @@
         color: gray;
         margin-top: 15px;
       }
+
+      #map {
+        height: 200px;
+        margin-top: 15px;
+        display: none;
+        border-radius: 10px;
+      }
     </style>
+
+    <!-- ✅ Leaflet Map -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   </head>
 
   <body>
     <div class="register-container">
       <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
       <h2>📝 School Bus Tracker</h2>
-      <p style="margin-bottom: 6px; font-size: 16px"><h3>REGISTERATION FORM</h3></p>
+      <p style="margin-bottom: 6px; font-size: 16px">REGISTER</p>
 
+      <!-- Role Switch -->
       <div class="role-options">
         <div class="role-option selected" data-role="student">Student</div>
         <div class="role-option" data-role="admin">Admin</div>
@@ -118,16 +133,28 @@
           required
         />
 
-        <!-- Hidden role input -->
-        <input type="hidden" id="role" value="student" />
+        <button type="button" class="btn" id="use-location-btn">
+          📍 Use My Location (Student Only)
+        </button>
+        <button
+          type="button"
+          class="btn"
+          id="confirm-location-btn"
+          style="display: none"
+        >
+          ✅ Confirm Location
+        </button>
 
-        <!-- Optional location -->
+        <!-- Hidden fields -->
         <input type="hidden" id="lat" />
         <input type="hidden" id="lng" />
+        <input type="hidden" id="role" value="student" />
 
         <button type="submit" class="btn">Register</button>
         <p id="error-msg" class="error"></p>
       </form>
+
+      <div id="map"></div>
 
       <p class="footer-note">
         🔒 This is a demo project built for academic purposes only. No real data
@@ -135,7 +162,7 @@
       </p>
     </div>
 
-    <!-- Firebase + Script Files -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
