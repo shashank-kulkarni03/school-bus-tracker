@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Student Registration</title>
+    <title>Register - School Bus Tracker</title>
     <style>
       body {
-        background: #e6f7ff;
         font-family: "Segoe UI", sans-serif;
+        background-color: #eaf4ff;
+        color: #333;
       }
 
       .register-container {
         max-width: 400px;
-        margin: 40px auto;
+        margin: 80px auto;
         padding: 30px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         text-align: center;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 6px;
+        color: #222;
       }
 
       h2 {
+        font-size: 18px;
         color: #0077cc;
+        margin-bottom: 8px;
       }
 
       input {
@@ -28,6 +37,8 @@
         margin: 12px 0;
         border-radius: 8px;
         border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        color: #333;
       }
 
       .btn {
@@ -38,57 +49,68 @@
         border-radius: 8px;
         width: 100%;
         cursor: pointer;
+        margin-top: 10px;
       }
 
       .btn:hover {
         background: #005fa3;
       }
 
+      .role-options {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        gap: 10px;
+      }
+
+      .role-option {
+        cursor: pointer;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid #0077cc;
+        color: #0077cc;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .role-option:hover {
+        background-color: #d0e9ff;
+      }
+
+      .role-option.selected {
+        background-color: #0077cc;
+        color: white;
+      }
+
       .error {
         color: red;
-        margin-top: 10px;
         font-size: 14px;
+        margin-top: 10px;
       }
 
-      .login-link {
+      .footer-note {
+        font-size: 12px;
+        color: gray;
         margin-top: 15px;
       }
-
-      .login-link a {
-        color: #0077cc;
-        text-decoration: none;
-      }
-
-      #map {
-        height: 300px;
-        margin-top: 20px;
-        display: none;
-        border-radius: 12px;
-        border: 1px solid #ccc;
-      }
     </style>
-
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   </head>
 
   <body>
     <div class="register-container">
       <h1>XYZ PUBLIC SCHOOL (Demo)</h1>
-      <h2>📝 Student Registration</h2>
-      <p>Create your account</p>
+      <h2>📝 School Bus Tracker</h2>
+      <p style="margin-bottom: 6px; font-size: 16px"><h3>REGISTERATION FORM</h3></p>
+
+      <div class="role-options">
+        <div class="role-option selected" data-role="student">Student</div>
+        <div class="role-option" data-role="admin">Admin</div>
+        <div class="role-option" data-role="driver">Driver</div>
+      </div>
 
       <form id="register-form">
         <input type="text" id="name" placeholder="Enter Full Name" required />
-        <input
-          type="email"
-          id="username"
-          placeholder="Enter Email (e.g. student@gmail.com)"
-          required
-        />
+        <input type="email" id="username" placeholder="Enter Email" required />
         <input
           type="password"
           id="password"
@@ -96,35 +118,24 @@
           required
         />
 
-        <!-- Location Fields -->
-        <input type="hidden" id="lat" name="lat" />
-        <input type="hidden" id="lng" name="lng" />
+        <!-- Hidden role input -->
+        <input type="hidden" id="role" value="student" />
 
-        <button
-          type="button"
-          class="btn"
-          onclick="getLocation()"
-          style="margin-bottom: 10px"
-        >
-          📍 Use My Location
-        </button>
-
-        <div id="map"></div>
+        <!-- Optional location -->
+        <input type="hidden" id="lat" />
+        <input type="hidden" id="lng" />
 
         <button type="submit" class="btn">Register</button>
         <p id="error-msg" class="error"></p>
       </form>
 
-      <div class="login-link">
-        Already have an account? <a href="login.html">Login</a>
-      </div>
-
-      <p style="font-size: 12px; color: gray; margin-top: 20px">
+      <p class="footer-note">
         🔒 This is a demo project built for academic purposes only. No real data
         is collected or used.
       </p>
     </div>
 
+    <!-- Firebase + Script Files -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
