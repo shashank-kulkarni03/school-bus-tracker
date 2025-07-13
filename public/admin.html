@@ -34,7 +34,6 @@
         border-radius: 12px;
         background: white;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        transition: all 0.5s ease-in-out;
       }
 
       .student-list {
@@ -77,6 +76,19 @@
         display: inline-block;
       }
 
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      table th,
+      table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+
       @media print {
         body * {
           visibility: hidden;
@@ -87,22 +99,10 @@
           visibility: visible;
         }
 
-        header,
+        .close-btn,
         #calendar,
-        #detail-link,
-        .close-btn {
+        #detail-link {
           display: none !important;
-        }
-
-        #status-container {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-        }
-
-        .student-list {
-          display: block !important;
         }
       }
     </style>
@@ -118,11 +118,20 @@
       <span id="detail-link">📄 View Details</span>
 
       <div class="student-list" id="student-list">
-        <ul id="student-names"></ul>
+        <table>
+          <thead>
+            <tr>
+              <th>SI No.</th>
+              <th>Student Name</th>
+              <th>Email ID</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="student-table-body"></tbody>
+        </table>
+
         <div class="actions">
-          <button class="print-btn" onclick="printStudentTable()">
-            🖨️ Print
-          </button>
+          <button class="print-btn" onclick="window.print()">🖨️ Print</button>
           <button
             class="close-btn"
             onclick="document.getElementById('student-list').style.display='none'"
