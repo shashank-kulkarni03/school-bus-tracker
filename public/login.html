@@ -93,6 +93,16 @@
         color: gray;
         margin-top: 15px;
       }
+
+      .forgot {
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .forgot a {
+        color: #0077cc;
+        text-decoration: none;
+      }
     </style>
   </head>
 
@@ -113,11 +123,14 @@
         <input type="password" id="password" placeholder="Enter Password" required />
         <input type="hidden" id="role" value="student" />
         <button type="submit" class="btn">Login</button>
+        <p class="forgot">
+          <a href="#" onclick="forgotPassword()">🔐 Forgot Password?</a>
+        </p>
         <p id="error-msg" class="error"></p>
       </form>
 
       <p class="footer-note">
-        🔒 This is a demo project built for academic purposes only. No real data is collected or used.
+        🔐 This is a demo project built for academic purposes only. No real data is collected or used.
       </p>
     </div>
 
