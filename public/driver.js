@@ -2,42 +2,69 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-const map = L.map("map").setView([20.5937, 78.9629], 5);
+const map = L.map("map").setView([13.1535, 77.614], 12); // Sir MVIT
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
 let routingControl = null;
+const schoolLatLng = L.latLng(13.1535, 77.614);
+let driverMarker = null;
 
-const now = new Date();
-const currentHour = now.getHours();
-const currentDateOnly = new Date(
-  now.getFullYear(),
-  now.getMonth(),
-  now.getDate()
-);
+// 2-opt optimization function
+function twoOpt(route) {
+  const distance = (a, b) => a.distanceTo(b);
+  let improved = true;
 
-// Time window logic
-const isAfter6PM = currentHour >= 18;
-const isBefore4PMNextDay =
-  currentHour < 16 || now.getDate() !== currentDateOnly.getDate();
-const isValidWindow = isAfter6PM || isBefore4PMNextDay;
+  while (improved) {
+    improved = false;
+    for (let i = 1; i < route.length - 2; i++) {
+      for (let j = i + 1; j < route.length - 1; j++) {
+        const newRoute = [...route];
+        newRoute.splice(i, j - i + 1, ...route.slice(i, j + 1).reverse());
+        const oldDist =
+          distance(route[i - 1], route[i]) + distance(route[j], route[j + 1]);
+        const newDist =
+          distance(newRoute[i - 1], newRoute[i]) +
+          distance(newRoute[j], newRoute[j + 1]);
+        if (newDist < oldDist) {
+          route = newRoute;
+          improved = true;
+        }
+      }
+    }
+  }
+  return route;
+}
 
-if (!isValidWindow) {
-  alert(
-    "⏳ Driver panel updates after 6:00 PM and is available till 4:00 PM next day."
-  );
-} else {
+// Load students and draw route
+function loadStudentRoute() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  const accessAllowed = currentHour >= 18 || currentHour < 16;
+
+  if (!accessAllowed) {
+    alert("⏳ Driver panel opens after 6 PM and remains till next day 4 PM.");
+    return;
+  }
+
   firebase
     .database()
     .ref("students")
     .once("value")
     .then((snapshot) => {
       const data = snapshot.val();
-      const students = [];
+      if (!data) return;
+
+      if (routingControl) map.removeControl(routingControl);
+
+      const waypoints = [];
       const sixPMYesterday = new Date();
-      sixPMYesterday.setDate(now.getDate() - (now.getHours() < 18 ? 1 : 0));
+      if (currentHour < 18)
+        sixPMYesterday.setDate(sixPMYesterday.getDate() - 1);
       sixPMYesterday.setHours(18, 0, 0, 0);
 
       for (const id in data) {
@@ -58,44 +85,34 @@ if (!isValidWindow) {
           second
         );
 
-        if (studentDate >= sixPMYesterday && student.willTakeBus === true) {
-          const name = student.name || "Unknown";
+        if (studentDate >= sixPMYesterday) {
           const lat = parseFloat(student.lat);
           const lng = parseFloat(student.lng);
+          const name = student.name || "Unknown";
 
           if (!isNaN(lat) && !isNaN(lng)) {
-            students.push({ name, lat, lng });
+            L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b>`);
+            waypoints.push(L.latLng(lat, lng));
           }
         }
       }
 
-      if (students.length === 0) {
+      if (waypoints.length === 0) {
         alert("⚠️ No valid student data to show.");
         return;
       }
 
-      // Optimize waypoints using Nearest Neighbor
-      const optimized = nearestNeighbor(students);
+      // Add school at start and end, then optimize
+      let routePoints = [schoolLatLng, ...waypoints, schoolLatLng];
+      routePoints = twoOpt(routePoints);
 
-      optimized.forEach((student) => {
-        const marker = L.marker([student.lat, student.lng])
-          .addTo(map)
-          .bindPopup(`<b>${student.name}</b>`);
-      });
-
-      const waypoints = optimized.map((s) => L.latLng(s.lat, s.lng));
-
-      if (waypoints.length >= 2) {
-        routingControl = L.Routing.control({
-          waypoints,
-          routeWhileDragging: false,
-          draggableWaypoints: false,
-          addWaypoints: false,
-          createMarker: () => null,
-        }).addTo(map);
-      } else {
-        map.setView(waypoints[0], 14);
-      }
+      routingControl = L.Routing.control({
+        waypoints: routePoints,
+        routeWhileDragging: false,
+        draggableWaypoints: false,
+        addWaypoints: false,
+        createMarker: () => null,
+      }).addTo(map);
     })
     .catch((err) => {
       console.error("🔥 Firebase error:", err);
@@ -103,55 +120,46 @@ if (!isValidWindow) {
     });
 }
 
-// 🔁 Nearest Neighbor Optimization
-function nearestNeighbor(points) {
-  const visited = new Array(points.length).fill(false);
-  const result = [];
-
-  let currentIndex = 0;
-  result.push(points[currentIndex]);
-  visited[currentIndex] = true;
-
-  for (let i = 1; i < points.length; i++) {
-    let nearestIndex = -1;
-    let minDist = Infinity;
-
-    for (let j = 0; j < points.length; j++) {
-      if (!visited[j]) {
-        const dist = distance(
-          points[currentIndex].lat,
-          points[currentIndex].lng,
-          points[j].lat,
-          points[j].lng
-        );
-        if (dist < minDist) {
-          minDist = dist;
-          nearestIndex = j;
-        }
-      }
-    }
-
-    if (nearestIndex !== -1) {
-      visited[nearestIndex] = true;
-      result.push(points[nearestIndex]);
-      currentIndex = nearestIndex;
-    }
+// Live driver GPS tracking
+function trackDriverLive() {
+  if (!navigator.geolocation) {
+    console.warn("❌ Geolocation not supported");
+    return;
   }
 
-  return result;
+  navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+
+      if (driverMarker) {
+        driverMarker.setLatLng([latitude, longitude]);
+      } else {
+        driverMarker = L.circleMarker([latitude, longitude], {
+          radius: 8,
+          color: "#007bff",
+          fillColor: "#007bff",
+          fillOpacity: 0.8,
+        })
+          .addTo(map)
+          .bindPopup("📍 Driver's Current Location");
+      }
+    },
+    (err) => {
+      console.error("Geolocation error:", err);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 3000,
+      timeout: 5000,
+    }
+  );
 }
 
-// 📏 Distance between two lat/lng
-function distance(lat1, lng1, lat2, lng2) {
-  const R = 6371; // Earth radius in km
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+// Initial load
+loadStudentRoute();
+trackDriverLive();
 
-function toRad(deg) {
-  return (deg * Math.PI) / 180;
-}
+// Refresh every 4 seconds
+setInterval(() => {
+  loadStudentRoute();
+}, 4000);
