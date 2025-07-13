@@ -10,14 +10,24 @@ document.addEventListener("DOMContentLoaded", function () {
     initialView: "dayGridMonth",
     dateClick: function (info) {
       const selectedDate = info.dateStr;
-      selectedDateEl.textContent = selectedDate;
+
+      // Highlight the selected cell
+      document
+        .querySelectorAll(".fc-daygrid-day")
+        .forEach((cell) => cell.classList.remove("selected-day"));
+      info.dayEl.classList.add("selected-day");
+
+      // Format to DD-MM-YYYY
+      const [yyyy, mm, dd] = selectedDate.split("-");
+      const formattedDate = `${dd}-${mm}-${yyyy}`;
+      selectedDateEl.textContent = formattedDate;
 
       // Scroll to status container
       document
         .getElementById("status-container")
         .scrollIntoView({ behavior: "smooth" });
 
-      // Fetch and count students from Firebase
+      // Fetch from Firebase
       firebase
         .database()
         .ref("students")
@@ -29,18 +39,21 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = child.val();
             const entryDate = data.timestamp?.split(",")[0] || "";
 
-            if (
-              entryDate === new Date(selectedDate).toLocaleDateString("en-IN")
-            ) {
-              if (data.willTakeBus) {
-                count++;
-                names.push(data.name);
-              }
+            // Compare in en-IN format
+            const calendarDate = new Date(selectedDate).toLocaleDateString(
+              "en-IN"
+            );
+
+            if (entryDate === calendarDate && data.willTakeBus) {
+              count++;
+              names.push(`${data.name} (${data.email || ""})`);
             }
           });
 
           totalCountEl.textContent = count;
-          studentListEl.innerHTML = names.map((n) => `<li>${n}</li>`).join("");
+          studentListEl.innerHTML = names
+            .map((n, i) => `<li>${i + 1}. ${n}</li>`)
+            .join("");
         });
     },
   });
