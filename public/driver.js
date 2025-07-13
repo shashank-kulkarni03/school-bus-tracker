@@ -18,6 +18,7 @@ const currentDateOnly = new Date(
   now.getDate()
 );
 
+// Time window: After 6PM to next day before 4PM
 const isAfter6PM = currentHour >= 18;
 const isBefore4PMNextDay =
   currentHour < 16 || now.getDate() !== currentDateOnly.getDate();
@@ -35,6 +36,15 @@ if (!isValidWindow) {
     .then((snapshot) => {
       const data = snapshot.val();
       const waypoints = [];
+      const sixPMYesterday = new Date();
+      sixPMYesterday.setDate(now.getDate() - (now.getHours() < 18 ? 1 : 0)); // adjust if before 6PM
+      sixPMYesterday.setHours(18, 0, 0, 0);
+
+      console.log("📅 Current time:", now.toLocaleString());
+      console.log(
+        "⏰ Comparing with 6PM yesterday:",
+        sixPMYesterday.toLocaleString()
+      );
 
       for (const id in data) {
         const student = data[id];
@@ -43,7 +53,6 @@ if (!isValidWindow) {
         const [datePart, timePart] = student.timestamp.split(",");
         if (!datePart || !timePart) continue;
 
-        // Parse DD/MM/YYYY manually
         const [day, month, year] = datePart.trim().split("/").map(Number);
         const [hour, minute, second] = timePart.trim().split(":").map(Number);
         const studentDate = new Date(
@@ -55,19 +64,24 @@ if (!isValidWindow) {
           second
         );
 
-        // If submitted after 6:00 PM today
-        const sixPMToday = new Date();
-        sixPMToday.setHours(18, 0, 0, 0);
+        const name = student.name || "Unknown";
+        const lat = parseFloat(student.lat);
+        const lng = parseFloat(student.lng);
 
-        if (studentDate >= sixPMToday && student.willTakeBus === true) {
-          const lat = parseFloat(student.lat);
-          const lng = parseFloat(student.lng);
-          const name = student.name;
+        console.log(`👤 Checking: ${name}`);
+        console.log("   📍 Lat/Lng:", lat, lng);
+        console.log(
+          "   📆 Timestamp:",
+          student.timestamp,
+          "Parsed:",
+          studentDate.toLocaleString()
+        );
+        console.log("   🚍 Will take bus:", student.willTakeBus);
+        console.log("   ✅ Valid time?:", studentDate >= sixPMYesterday);
 
+        if (studentDate >= sixPMYesterday && student.willTakeBus === true) {
           if (!isNaN(lat) && !isNaN(lng)) {
-            const marker = L.marker([lat, lng])
-              .addTo(map)
-              .bindPopup(`<b>${name}</b>`);
+            L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b>`);
             waypoints.push(L.latLng(lat, lng));
           }
         }
