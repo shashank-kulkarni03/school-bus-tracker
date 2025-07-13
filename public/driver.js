@@ -1,46 +1,61 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyDQPblcwF2QLWdXtM2Q8xdESzh4NOVSzP8",
+  authDomain: "school-bus-tracker-e6a1d.firebaseapp.com",
+  databaseURL:
+    "https://school-bus-tracker-e6a1d-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "school-bus-tracker-e6a1d",
+  storageBucket: "school-bus-tracker-e6a1d.appspot.com",
+  messagingSenderId: "610506187838",
+  appId: "1:610506187838:web:c5e0988b8539d2baae9d6f",
+};
+
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-const map = L.map("map").setView([13.1535, 77.614], 12); // Sir MVIT
+const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
+const map = L.map("map").setView(schoolLatLng, 12);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-let routingControl = null;
-const schoolLatLng = L.latLng(13.1535, 77.614);
-
 const schoolIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/167/167707.png",
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-  popupAnchor: [0, -30],
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
 });
 
 L.marker(schoolLatLng, { icon: schoolIcon })
   .addTo(map)
-  .bindPopup("<b>🏫 Sir MVIT (School)</b>")
-  .openPopup();
+  .bindPopup("🏫 Sir MVIT - School Location");
 
+let studentMarkers = [];
+let routingControl = null;
 let driverMarker = null;
 
-// 2-opt optimization function
-function twoOpt(route) {
-  const distance = (a, b) => a.distanceTo(b);
-  let improved = true;
+// ⏰ Time check
+function isWithinTimeWindow() {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 18 || hour < 16;
+}
 
+// 📍 Haversine distance
+function getDistance(p1, p2) {
+  return map.distance(p1, p2);
+}
+
+// 🔄 2-opt optimization
+function twoOpt(route) {
+  let improved = true;
   while (improved) {
     improved = false;
     for (let i = 1; i < route.length - 2; i++) {
-      for (let j = i + 1; j < route.length - 1; j++) {
-        const newRoute = [...route];
-        newRoute.splice(i, j - i + 1, ...route.slice(i, j + 1).reverse());
-        const oldDist =
-          distance(route[i - 1], route[i]) + distance(route[j], route[j + 1]);
-        const newDist =
-          distance(newRoute[i - 1], newRoute[i]) +
-          distance(newRoute[j], newRoute[j + 1]);
+      for (let k = i + 1; k < route.length - 1; k++) {
+        const newRoute = twoOptSwap(route, i, k);
+        const oldDist = totalDistance(route);
+        const newDist = totalDistance(newRoute);
         if (newDist < oldDist) {
           route = newRoute;
           improved = true;
@@ -51,128 +66,107 @@ function twoOpt(route) {
   return route;
 }
 
-// Load students and draw route
-function loadStudentRoute() {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-
-  const accessAllowed = currentHour >= 18 || currentHour < 16;
-
-  if (!accessAllowed) {
-    alert("⏳ Driver panel opens after 6 PM and remains till next day 4 PM.");
-    return;
-  }
-
-  firebase
-    .database()
-    .ref("students")
-    .once("value")
-    .then((snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-
-      if (routingControl) map.removeControl(routingControl);
-
-      const waypoints = [];
-      const sixPMYesterday = new Date();
-      if (currentHour < 18)
-        sixPMYesterday.setDate(sixPMYesterday.getDate() - 1);
-      sixPMYesterday.setHours(18, 0, 0, 0);
-
-      for (const id in data) {
-        const student = data[id];
-        if (!student || !student.timestamp || !student.willTakeBus) continue;
-
-        const [datePart, timePart] = student.timestamp.split(",");
-        if (!datePart || !timePart) continue;
-
-        const [day, month, year] = datePart.trim().split("/").map(Number);
-        const [hour, minute, second] = timePart.trim().split(":").map(Number);
-        const studentDate = new Date(
-          year,
-          month - 1,
-          day,
-          hour,
-          minute,
-          second
-        );
-
-        if (studentDate >= sixPMYesterday) {
-          const lat = parseFloat(student.lat);
-          const lng = parseFloat(student.lng);
-          const name = student.name || "Unknown";
-
-          if (!isNaN(lat) && !isNaN(lng)) {
-            L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b>`);
-            waypoints.push(L.latLng(lat, lng));
-          }
-        }
-      }
-
-      if (waypoints.length === 0) {
-        alert("⚠️ No valid student data to show.");
-        return;
-      }
-
-      // Add school at start and end, then optimize
-      let routePoints = [schoolLatLng, ...waypoints, schoolLatLng];
-      routePoints = twoOpt(routePoints);
-
-      routingControl = L.Routing.control({
-        waypoints: routePoints,
-        routeWhileDragging: false,
-        draggableWaypoints: false,
-        addWaypoints: false,
-        createMarker: () => null,
-      }).addTo(map);
-    })
-    .catch((err) => {
-      console.error("🔥 Firebase error:", err);
-      alert("Failed to load student data.");
-    });
+function twoOptSwap(route, i, k) {
+  const start = route.slice(0, i);
+  const middle = route.slice(i, k + 1).reverse();
+  const end = route.slice(k + 1);
+  return start.concat(middle).concat(end);
 }
 
-// Live driver GPS tracking
-function trackDriverLive() {
-  if (!navigator.geolocation) {
-    console.warn("❌ Geolocation not supported");
-    return;
+function totalDistance(route) {
+  let dist = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    dist += getDistance(route[i], route[i + 1]);
+  }
+  return dist;
+}
+
+// 🗺️ Update map with students & routing
+async function updateMapData() {
+  if (!isWithinTimeWindow()) return;
+
+  studentMarkers.forEach((m) => map.removeLayer(m));
+  studentMarkers = [];
+
+  const snapshot = await firebase.database().ref("students").once("value");
+  const students = snapshot.val();
+
+  const now = new Date();
+  const sixPMYesterday = new Date();
+  sixPMYesterday.setDate(
+    now.getHours() < 18 ? now.getDate() - 1 : now.getDate()
+  );
+  sixPMYesterday.setHours(18, 0, 0, 0);
+
+  const waypoints = [];
+
+  for (const id in students) {
+    const s = students[id];
+    if (!s || !s.timestamp || !s.willTakeBus) continue;
+
+    const [dateStr, timeStr] = s.timestamp.split(",");
+    const [d, m, y] = dateStr.trim().split("/").map(Number);
+    const [h, min, sec] = timeStr.trim().split(":").map(Number);
+    const ts = new Date(y, m - 1, d, h, min, sec);
+
+    if (
+      ts >= sixPMYesterday &&
+      s.willTakeBus &&
+      !isNaN(s.lat) &&
+      !isNaN(s.lng)
+    ) {
+      const latlng = L.latLng(s.lat, s.lng);
+      waypoints.push(latlng);
+
+      const marker = L.marker(latlng)
+        .addTo(map)
+        .bindPopup(`<b>${s.name}</b><br>${s.email || ""}`);
+      studentMarkers.push(marker);
+    }
   }
 
-  navigator.geolocation.watchPosition(
-    (position) => {
-      const { latitude, longitude } = position.coords;
+  if (routingControl) map.removeControl(routingControl);
 
-      if (driverMarker) {
-        driverMarker.setLatLng([latitude, longitude]);
-      } else {
-        driverMarker = L.circleMarker([latitude, longitude], {
+  if (waypoints.length > 0) {
+    let route = [L.latLng(schoolLatLng), ...waypoints, L.latLng(schoolLatLng)];
+    const optimized = twoOpt(route);
+
+    routingControl = L.Routing.control({
+      waypoints: optimized,
+      routeWhileDragging: false,
+      draggableWaypoints: false,
+      addWaypoints: false,
+      createMarker: () => null,
+    }).addTo(map);
+  }
+}
+
+// 🚍 Track driver
+function trackDriverLocation() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        const latlng = [pos.coords.latitude, pos.coords.longitude];
+        if (driverMarker) map.removeLayer(driverMarker);
+
+        driverMarker = L.circleMarker(latlng, {
           radius: 8,
-          color: "#007bff",
-          fillColor: "#007bff",
+          color: "blue",
+          fillColor: "#00f",
           fillOpacity: 0.8,
         })
           .addTo(map)
-          .bindPopup("📍 Driver's Current Location");
-      }
-    },
-    (err) => {
-      console.error("Geolocation error:", err);
-    },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 3000,
-      timeout: 5000,
-    }
-  );
+          .bindPopup("🚌 Driver Location");
+      },
+      (err) => console.error("📡 GPS error:", err),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 }
+    );
+  } else {
+    alert("❌ Geolocation not supported.");
+  }
 }
 
-// Initial load
-loadStudentRoute();
-trackDriverLive();
-
-// Refresh every 4 seconds
-setInterval(() => {
-  loadStudentRoute();
-}, 4000);
+// 🔁 Refresh markers & route every 5s
+setInterval(updateMapData, 5000);
+updateMapData();
+trackDriverLocation();
