@@ -17,7 +17,13 @@ function getValue(val) {
 }
 
 const now = new Date();
-const currentDateStr = now.toLocaleDateString("en-IN"); // DD/MM/YYYY
+const todayStr = now.toLocaleDateString("en-IN"); // 14/07/2025
+const yesterday = new Date(now);
+yesterday.setDate(now.getDate() - 1);
+const yesterdayStr = yesterday.toLocaleDateString("en-IN"); // 13/07/2025
+
+const isBefore5PM =
+  now.getHours() < 17 || (now.getHours() === 17 && now.getMinutes() === 0);
 
 firebase
   .database()
@@ -43,8 +49,7 @@ firebase
       const [dateStr, timeStr] = timestamp.split(",");
       if (!dateStr || !timeStr) continue;
 
-      const isToday = dateStr.trim() === currentDateStr;
-
+      const studentDate = dateStr.trim(); // DD/MM/YYYY
       const [hourStr, minuteStr] = timeStr.trim().split(":");
       const studentHour = parseInt(hourStr);
       const studentMinute = parseInt(minuteStr);
@@ -52,7 +57,19 @@ firebase
       const submittedAfter5PM =
         studentHour > 17 || (studentHour === 17 && studentMinute > 0);
 
-      if (isToday && willTakeBus && submittedAfter5PM) {
+      // Logic:
+      let include = false;
+      if (isBefore5PM) {
+        if (studentDate === yesterdayStr && submittedAfter5PM) {
+          include = true;
+        }
+      } else {
+        if (studentDate === todayStr) {
+          include = true;
+        }
+      }
+
+      if (include) {
         const latlng = L.latLng(lat, lng);
         waypoints.push(latlng);
 
@@ -73,7 +90,7 @@ firebase
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);
     } else {
-      alert("⚠️ No valid student data for today AFTER 5:00 PM.");
+      alert("⚠️ No valid student data to display.");
     }
   })
   .catch((err) => {
