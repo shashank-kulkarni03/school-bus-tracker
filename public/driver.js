@@ -5,23 +5,36 @@ if (!firebase.apps.length) {
 
 // Initialize Leaflet map
 const map = L.map("map").setView([20.5937, 78.9629], 5); // India center
-
-// Add OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-// Remove existing markers
-let routingControl = null;
-
-// Helper to safely extract values like { Value: 13.1 }
+// Utility to extract value
 function getValue(val) {
   if (val === null || val === undefined) return null;
   if (typeof val === "object" && "Value" in val) return val.Value;
   return val;
 }
 
-// Fetch students
+// ✅ Helper to check if timestamp is from today and before 5 PM
+function isValidTodayBefore5PM(timestamp) {
+  if (!timestamp) return false;
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  // Check if it's today
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  // Check if it's before 5 PM
+  const isBefore5PM = date.getHours() < 17;
+
+  return isToday && isBefore5PM;
+}
+
+// Main logic
 firebase
   .database()
   .ref("students")
@@ -34,16 +47,28 @@ firebase
 
     for (const uid in students) {
       const student = students[uid];
-
       const name = getValue(student.name);
       const email = getValue(student.email);
       const lat = parseFloat(getValue(student.lat));
       const lng = parseFloat(getValue(student.lng));
       const willTakeBus = getValue(student.willTakeBus);
+      const timestamp = getValue(student.timestamp); // should be stored at update
 
-      console.log("🔍 Checking student:", name, lat, lng, willTakeBus);
+      console.log(
+        "🔍 Checking student:",
+        name,
+        lat,
+        lng,
+        willTakeBus,
+        timestamp
+      );
 
-      if (willTakeBus === true && !isNaN(lat) && !isNaN(lng)) {
+      if (
+        willTakeBus === true &&
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        isValidTodayBefore5PM(timestamp)
+      ) {
         const latlng = L.latLng(lat, lng);
         waypoints.push(latlng);
 
@@ -53,10 +78,8 @@ firebase
       }
     }
 
-    console.log("📍 Total waypoints:", waypoints.length, waypoints);
-
     if (waypoints.length >= 2) {
-      routingControl = L.Routing.control({
+      L.Routing.control({
         waypoints: waypoints,
         routeWhileDragging: false,
         draggableWaypoints: false,
@@ -66,7 +89,7 @@ firebase
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);
     } else {
-      alert("No students selected YES to take the bus.");
+      alert("⚠️ No valid student data for today before 5:00 PM.");
     }
   })
   .catch((err) => {
