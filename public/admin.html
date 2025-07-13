@@ -77,9 +77,33 @@
         display: inline-block;
       }
 
-      .selected-day {
-        background-color: #cce5ff !important;
-        border-radius: 6px;
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+
+        #status-container,
+        #status-container * {
+          visibility: visible;
+        }
+
+        header,
+        #calendar,
+        #detail-link,
+        .close-btn {
+          display: none !important;
+        }
+
+        #status-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+        }
+
+        .student-list {
+          display: block !important;
+        }
       }
     </style>
   </head>
@@ -96,7 +120,9 @@
       <div class="student-list" id="student-list">
         <ul id="student-names"></ul>
         <div class="actions">
-          <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+          <button class="print-btn" onclick="printStudentTable()">
+            🖨️ Print
+          </button>
           <button
             class="close-btn"
             onclick="document.getElementById('student-list').style.display='none'"
