@@ -18,7 +18,7 @@ const currentDateOnly = new Date(
   now.getDate()
 );
 
-// Time window: After 6PM to next day before 4PM
+// Time window logic
 const isAfter6PM = currentHour >= 18;
 const isBefore4PMNextDay =
   currentHour < 16 || now.getDate() !== currentDateOnly.getDate();
@@ -35,16 +35,10 @@ if (!isValidWindow) {
     .once("value")
     .then((snapshot) => {
       const data = snapshot.val();
-      const waypoints = [];
+      const students = [];
       const sixPMYesterday = new Date();
-      sixPMYesterday.setDate(now.getDate() - (now.getHours() < 18 ? 1 : 0)); // adjust if before 6PM
+      sixPMYesterday.setDate(now.getDate() - (now.getHours() < 18 ? 1 : 0));
       sixPMYesterday.setHours(18, 0, 0, 0);
-
-      console.log("📅 Current time:", now.toLocaleString());
-      console.log(
-        "⏰ Comparing with 6PM yesterday:",
-        sixPMYesterday.toLocaleString()
-      );
 
       for (const id in data) {
         const student = data[id];
@@ -64,28 +58,32 @@ if (!isValidWindow) {
           second
         );
 
-        const name = student.name || "Unknown";
-        const lat = parseFloat(student.lat);
-        const lng = parseFloat(student.lng);
-
-        console.log(`👤 Checking: ${name}`);
-        console.log("   📍 Lat/Lng:", lat, lng);
-        console.log(
-          "   📆 Timestamp:",
-          student.timestamp,
-          "Parsed:",
-          studentDate.toLocaleString()
-        );
-        console.log("   🚍 Will take bus:", student.willTakeBus);
-        console.log("   ✅ Valid time?:", studentDate >= sixPMYesterday);
-
         if (studentDate >= sixPMYesterday && student.willTakeBus === true) {
+          const name = student.name || "Unknown";
+          const lat = parseFloat(student.lat);
+          const lng = parseFloat(student.lng);
+
           if (!isNaN(lat) && !isNaN(lng)) {
-            L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b>`);
-            waypoints.push(L.latLng(lat, lng));
+            students.push({ name, lat, lng });
           }
         }
       }
+
+      if (students.length === 0) {
+        alert("⚠️ No valid student data to show.");
+        return;
+      }
+
+      // Optimize waypoints using Nearest Neighbor
+      const optimized = nearestNeighbor(students);
+
+      optimized.forEach((student) => {
+        const marker = L.marker([student.lat, student.lng])
+          .addTo(map)
+          .bindPopup(`<b>${student.name}</b>`);
+      });
+
+      const waypoints = optimized.map((s) => L.latLng(s.lat, s.lng));
 
       if (waypoints.length >= 2) {
         routingControl = L.Routing.control({
@@ -95,14 +93,65 @@ if (!isValidWindow) {
           addWaypoints: false,
           createMarker: () => null,
         }).addTo(map);
-      } else if (waypoints.length === 1) {
-        map.setView(waypoints[0], 14);
       } else {
-        alert("⚠️ No valid student data to show.");
+        map.setView(waypoints[0], 14);
       }
     })
     .catch((err) => {
       console.error("🔥 Firebase error:", err);
       alert("Failed to load student data.");
     });
+}
+
+// 🔁 Nearest Neighbor Optimization
+function nearestNeighbor(points) {
+  const visited = new Array(points.length).fill(false);
+  const result = [];
+
+  let currentIndex = 0;
+  result.push(points[currentIndex]);
+  visited[currentIndex] = true;
+
+  for (let i = 1; i < points.length; i++) {
+    let nearestIndex = -1;
+    let minDist = Infinity;
+
+    for (let j = 0; j < points.length; j++) {
+      if (!visited[j]) {
+        const dist = distance(
+          points[currentIndex].lat,
+          points[currentIndex].lng,
+          points[j].lat,
+          points[j].lng
+        );
+        if (dist < minDist) {
+          minDist = dist;
+          nearestIndex = j;
+        }
+      }
+    }
+
+    if (nearestIndex !== -1) {
+      visited[nearestIndex] = true;
+      result.push(points[nearestIndex]);
+      currentIndex = nearestIndex;
+    }
+  }
+
+  return result;
+}
+
+// 📏 Distance between two lat/lng
+function distance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Earth radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toRad(deg) {
+  return (deg * Math.PI) / 180;
 }
