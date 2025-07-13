@@ -8,10 +8,24 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 let routingControl = null;
 
+// Helper to extract plain values from Firebase
 function getValue(val) {
   if (val === null || val === undefined) return null;
   if (typeof val === "object" && "Value" in val) return val.Value;
   return val;
+}
+
+// Custom function to parse DD/MM/YYYY, HH:mm:ss into Date object
+function parseIndianTimestamp(timestampStr) {
+  try {
+    const [datePart, timePart] = timestampStr.split(",");
+    const [day, month, year] = datePart.trim().split("/").map(Number);
+    const [hour, minute, second] = timePart.trim().split(":").map(Number);
+    return new Date(year, month - 1, day, hour, minute, second);
+  } catch (e) {
+    console.warn("⛔ Invalid timestamp format:", timestampStr);
+    return null;
+  }
 }
 
 firebase
@@ -24,10 +38,10 @@ firebase
 
     const waypoints = [];
     const now = new Date();
-    const todayStr = now.toLocaleDateString("en-IN"); // "13/07/2025"
 
-    const cutoffTime = new Date();
-    cutoffTime.setHours(17, 0, 0); // 5:00 PM
+    // Create cutoff time for today at 5:00 PM
+    const cutoff = new Date();
+    cutoff.setHours(17, 0, 0, 0); // 5:00 PM
 
     for (const uid in students) {
       const student = students[uid];
@@ -37,22 +51,27 @@ firebase
       const lat = parseFloat(getValue(student.lat));
       const lng = parseFloat(getValue(student.lng));
       const willTakeBus = getValue(student.willTakeBus);
-      const timestamp = getValue(student.timestamp);
+      const timestampStr = getValue(student.timestamp);
 
-      if (willTakeBus && !isNaN(lat) && !isNaN(lng)) {
-        if (timestamp) {
-          const [dateStr, timeStr] = timestamp.split(",");
-          if (dateStr.trim() === todayStr) {
-            const time = timeStr?.trim();
-            const dateTime = new Date(`${todayStr} ${time}`);
-            if (dateTime < cutoffTime) {
-              const latlng = L.latLng(lat, lng);
-              waypoints.push(latlng);
-              L.marker(latlng)
-                .addTo(map)
-                .bindPopup(`<b>${name}</b><br>${email || ""}`);
-            }
-          }
+      if (
+        willTakeBus &&
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        typeof timestampStr === "string"
+      ) {
+        const studentTime = parseIndianTimestamp(timestampStr);
+
+        // Check if student time is from today AND before 5:00 PM
+        if (
+          studentTime &&
+          studentTime.toDateString() === now.toDateString() &&
+          studentTime <= cutoff
+        ) {
+          const latlng = L.latLng(lat, lng);
+          waypoints.push(latlng);
+          L.marker(latlng)
+            .addTo(map)
+            .bindPopup(`<b>${name}</b><br>${email || ""}`);
         }
       }
     }
