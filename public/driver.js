@@ -1,5 +1,10 @@
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 // Initialize Leaflet map
-const map = L.map("map").setView([20.5937, 78.9629], 5);
+const map = L.map("map").setView([20.5937, 78.9629], 5); // Center of India
 
 // Add OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -8,26 +13,22 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 let routingControl = null;
 
-// Helper to extract plain values from Firebase
+// Helper to extract value
 function getValue(val) {
-  if (val === null || val === undefined) return null;
+  if (!val) return null;
   if (typeof val === "object" && "Value" in val) return val.Value;
   return val;
 }
 
-// Custom function to parse DD/MM/YYYY, HH:mm:ss into Date object
-function parseIndianTimestamp(timestampStr) {
-  try {
-    const [datePart, timePart] = timestampStr.split(",");
-    const [day, month, year] = datePart.trim().split("/").map(Number);
-    const [hour, minute, second] = timePart.trim().split(":").map(Number);
-    return new Date(year, month - 1, day, hour, minute, second);
-  } catch (e) {
-    console.warn("⛔ Invalid timestamp format:", timestampStr);
-    return null;
-  }
-}
+// Get today's date in DD/MM/YYYY format
+const now = new Date();
+const currentDateStr = now.toLocaleDateString("en-IN"); // DD/MM/YYYY
 
+// Check if current time is before 5:00 PM IST
+const isBefore5PM =
+  now.getHours() < 17 || (now.getHours() === 17 && now.getMinutes() === 0);
+
+// Fetch students
 firebase
   .database()
   .ref("students")
@@ -37,11 +38,6 @@ firebase
     if (!students) return;
 
     const waypoints = [];
-    const now = new Date();
-
-    // Create cutoff time for today at 5:00 PM
-    const cutoff = new Date();
-    cutoff.setHours(17, 0, 0, 0); // 5:00 PM
 
     for (const uid in students) {
       const student = students[uid];
@@ -51,31 +47,35 @@ firebase
       const lat = parseFloat(getValue(student.lat));
       const lng = parseFloat(getValue(student.lng));
       const willTakeBus = getValue(student.willTakeBus);
-      const timestampStr = getValue(student.timestamp);
+      const timestamp = getValue(student.timestamp);
 
-      if (
-        willTakeBus &&
-        !isNaN(lat) &&
-        !isNaN(lng) &&
-        typeof timestampStr === "string"
-      ) {
-        const studentTime = parseIndianTimestamp(timestampStr);
+      if (!timestamp || !willTakeBus || isNaN(lat) || isNaN(lng)) continue;
 
-        // Check if student time is from today AND before 5:00 PM
-        if (
-          studentTime &&
-          studentTime.toDateString() === now.toDateString() &&
-          studentTime <= cutoff
-        ) {
-          const latlng = L.latLng(lat, lng);
-          waypoints.push(latlng);
-          L.marker(latlng)
-            .addTo(map)
-            .bindPopup(`<b>${name}</b><br>${email || ""}`);
-        }
+      const [dateStr, timeStr] = timestamp.split(",");
+      const timestampDate = dateStr?.trim();
+
+      const timestampTime = timeStr?.trim();
+      const studentHour = parseInt(timestampTime?.split(":")[0]);
+      const studentMinute = parseInt(timestampTime?.split(":")[1]);
+
+      const isToday = timestampDate === currentDateStr;
+
+      const isStudentBefore5PM =
+        studentHour < 17 || (studentHour === 17 && studentMinute === 0);
+
+      const validBefore5PM = isBefore5PM ? isStudentBefore5PM : true;
+
+      if (isToday && willTakeBus && validBefore5PM) {
+        const latlng = L.latLng(lat, lng);
+        waypoints.push(latlng);
+
+        L.marker(latlng)
+          .addTo(map)
+          .bindPopup(`<b>${name}</b><br>${email || ""}`);
       }
     }
 
+    // Route if valid students exist
     if (waypoints.length >= 2) {
       routingControl = L.Routing.control({
         waypoints: waypoints,
