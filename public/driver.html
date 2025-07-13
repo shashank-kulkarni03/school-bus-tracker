@@ -2,18 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Driver Panel - School Bus Tracker</title>
-
-    <!-- Leaflet CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-    <!-- Routing Machine CSS -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
     />
-
     <style>
       html,
       body,
@@ -21,24 +16,19 @@
         height: 100%;
         margin: 0;
         padding: 0;
-        font-family: Arial, sans-serif;
       }
     </style>
   </head>
   <body>
     <div id="map"></div>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <!-- Leaflet Routing Machine JS -->
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <!-- Firebase Config -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyDQPblcwF2QLWdXtM2Q8xdESzh4NOVSzP8",
@@ -53,7 +43,6 @@
       firebase.initializeApp(firebaseConfig);
     </script>
 
-    <!-- Your Driver Panel Logic -->
     <script src="driver.js"></script>
   </body>
 </html>

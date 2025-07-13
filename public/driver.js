@@ -1,8 +1,5 @@
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const map = L.map("map").setView([20.5937, 78.9629], 5); // Center of India
+// Leaflet map init
+const map = L.map("map").setView([20.5937, 78.9629], 5); // India center
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
@@ -10,21 +7,30 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 let routingControl = null;
 
+// Get current date-time
+const now = new Date();
+const todayDateStr = now.toLocaleDateString("en-IN"); // DD/MM/YYYY
+const currentHour = now.getHours();
+
+// Determine display mode
+const isAfter6PM = currentHour >= 18;
+const isBefore4PMNextDay =
+  currentHour < 16 || now.getDate() !== new Date().getDate();
+
+// If it's NOT between 6:00PM and 4:00PM next day, stop
+if (!isAfter6PM && !isBefore4PMNextDay) {
+  alert("🕔 Map is only available between 6:00PM and next day 4:00PM.");
+  throw new Error("Access outside allowed time.");
+}
+
+// Helper
 function getValue(val) {
-  if (!val) return null;
+  if (val === null || val === undefined) return null;
   if (typeof val === "object" && "Value" in val) return val.Value;
   return val;
 }
 
-const now = new Date();
-const todayStr = now.toLocaleDateString("en-IN"); // 14/07/2025
-const yesterday = new Date(now);
-yesterday.setDate(now.getDate() - 1);
-const yesterdayStr = yesterday.toLocaleDateString("en-IN"); // 13/07/2025
-
-const isBefore5PM =
-  now.getHours() < 17 || (now.getHours() === 17 && now.getMinutes() === 0);
-
+// Reset map and fetch student locations
 firebase
   .database()
   .ref("students")
@@ -34,54 +40,39 @@ firebase
     if (!students) return;
 
     const waypoints = [];
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const validDateStr = isAfter6PM
+      ? today.toLocaleDateString("en-IN")
+      : yesterday.toLocaleDateString("en-IN");
 
     for (const uid in students) {
-      const student = students[uid];
-      const name = getValue(student.name);
-      const email = getValue(student.email);
-      const lat = parseFloat(getValue(student.lat));
-      const lng = parseFloat(getValue(student.lng));
-      const willTakeBus = getValue(student.willTakeBus);
-      const timestamp = getValue(student.timestamp);
+      const s = students[uid];
+      const timestamp = getValue(s.timestamp);
+      const willTakeBus = getValue(s.willTakeBus);
+      const lat = parseFloat(getValue(s.lat));
+      const lng = parseFloat(getValue(s.lng));
 
       if (!timestamp || !willTakeBus || isNaN(lat) || isNaN(lng)) continue;
 
-      const [dateStr, timeStr] = timestamp.split(",");
-      if (!dateStr || !timeStr) continue;
+      const [dateStr] = timestamp.split(",");
+      const formattedDate = dateStr.trim();
 
-      const studentDate = dateStr.trim(); // DD/MM/YYYY
-      const [hourStr, minuteStr] = timeStr.trim().split(":");
-      const studentHour = parseInt(hourStr);
-      const studentMinute = parseInt(minuteStr);
-
-      const submittedAfter5PM =
-        studentHour > 17 || (studentHour === 17 && studentMinute > 0);
-
-      // Logic:
-      let include = false;
-      if (isBefore5PM) {
-        if (studentDate === yesterdayStr && submittedAfter5PM) {
-          include = true;
-        }
-      } else {
-        if (studentDate === todayStr) {
-          include = true;
-        }
-      }
-
-      if (include) {
+      if (formattedDate === validDateStr && willTakeBus) {
         const latlng = L.latLng(lat, lng);
         waypoints.push(latlng);
 
         L.marker(latlng)
           .addTo(map)
-          .bindPopup(`<b>${name}</b><br>${email || ""}`);
+          .bindPopup(`<b>${s.name}</b><br>${s.email || ""}`);
       }
     }
 
     if (waypoints.length >= 2) {
       routingControl = L.Routing.control({
-        waypoints: waypoints,
+        waypoints,
         routeWhileDragging: false,
         draggableWaypoints: false,
         addWaypoints: false,
@@ -90,10 +81,10 @@ firebase
     } else if (waypoints.length === 1) {
       map.setView(waypoints[0], 14);
     } else {
-      alert("⚠️ No valid student data to display.");
+      alert("⚠️ No valid student data to show.");
     }
   })
   .catch((err) => {
-    console.error("🔥 Firebase error:", err);
+    console.error("❌ Firebase error:", err);
     alert("Failed to load student data.");
   });
