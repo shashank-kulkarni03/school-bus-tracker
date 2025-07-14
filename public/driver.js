@@ -25,7 +25,6 @@ let routingControl = null;
 let driverMarker = null;
 let driverRoute = [];
 let driverPolyline = null;
-let waypoints = [];
 
 // 🧠 Distance calc (Haversine)
 function getDistance(p1, p2) {
@@ -62,17 +61,11 @@ function totalDistance(route) {
   return dist;
 }
 
-// ✅ Time window check
-function isWithinTimeWindow() {
-  const now = new Date();
-  const hour = now.getHours();
-  return hour >= 18 || hour < 16;
-}
+// ✅ Student waypoints (used globally)
+let waypoints = [];
 
 // 📍 Update student markers + route
 async function updateStudentData() {
-  if (!isWithinTimeWindow()) return;
-
   studentMarkers.forEach((m) => map.removeLayer(m));
   studentMarkers = [];
   waypoints = [];
@@ -81,11 +74,16 @@ async function updateStudentData() {
   const students = snapshot.val();
 
   const now = new Date();
-  const sixPMYesterday = new Date();
-  sixPMYesterday.setDate(
-    now.getHours() < 18 ? now.getDate() - 1 : now.getDate()
+
+  const lowerLimit = new Date();
+  lowerLimit.setDate(
+    now.getHours() < 18 ? now.getDate() - 2 : now.getDate() - 1
   );
-  sixPMYesterday.setHours(18, 0, 0, 0);
+  lowerLimit.setHours(18, 0, 0, 0); // Yesterday 6:00 PM
+
+  const upperLimit = new Date();
+  upperLimit.setDate(now.getDate());
+  upperLimit.setHours(17, 30, 0, 0); // Today 5:30 PM
 
   for (const id in students) {
     const s = students[id];
@@ -97,8 +95,8 @@ async function updateStudentData() {
     const ts = new Date(y, m - 1, d, h, min, sec);
 
     if (
-      ts >= sixPMYesterday &&
-      s.willTakeBus &&
+      ts >= lowerLimit &&
+      ts <= upperLimit &&
       !isNaN(s.lat) &&
       !isNaN(s.lng)
     ) {
@@ -161,9 +159,10 @@ function updateDriverLocation() {
         opacity: 0.6,
       }).addTo(map);
 
+      // Route to nearest waypoint
       if (waypoints.length > 0) {
         let nearest = waypoints[0];
-        let minDist = getDistance(latlng, waypoints[0]);
+        let minDist = getDistance(latlng, nearest);
         for (let i = 1; i < waypoints.length; i++) {
           const dist = getDistance(latlng, waypoints[i]);
           if (dist < minDist) {
@@ -176,9 +175,6 @@ function updateDriverLocation() {
 
         driverToRouteControl = L.Routing.control({
           waypoints: [latlng, nearest],
-          router: new L.Routing.OSRMv1({
-            serviceUrl: "https://router.project-osrm.org/route/v1",
-          }),
           routeWhileDragging: false,
           draggableWaypoints: false,
           addWaypoints: false,
@@ -199,7 +195,8 @@ function updateDriverLocation() {
   );
 }
 
+// 🕒 Refresh intervals
 updateStudentData();
 updateDriverLocation();
-setInterval(updateDriverLocation, 10000); // every 10s
-setInterval(updateStudentData, 2 * 60 * 1000); // every 2 mins
+setInterval(updateDriverLocation, 10000); // every 10 sec
+setInterval(updateStudentData, 2 * 60 * 1000); // every 2 min
