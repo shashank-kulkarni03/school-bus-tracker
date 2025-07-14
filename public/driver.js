@@ -139,8 +139,9 @@ function updateDriverLocation() {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const latlng = [pos.coords.latitude, pos.coords.longitude];
-      if (driverMarker) map.removeLayer(driverMarker);
 
+      // 🔵 Update live driver marker
+      if (driverMarker) map.removeLayer(driverMarker);
       driverMarker = L.circleMarker(latlng, {
         radius: 8,
         color: "blue",
@@ -149,11 +150,22 @@ function updateDriverLocation() {
       })
         .addTo(map)
         .bindPopup("🚌 Driver Location");
+
+      // 🛣️ Track route
+      driverRoute.push(latlng);
+
+      // 🗺️ Remove old polyline and draw new one
+      if (driverPolyline) map.removeLayer(driverPolyline);
+      driverPolyline = L.polyline(driverRoute, {
+        color: "blue",
+        weight: 3,
+        opacity: 0.7,
+      }).addTo(map);
     },
     (err) => console.error("📡 GPS error:", err),
     {
       enableHighAccuracy: true,
-      maximumAge: 0, // ⬅️ Use fresh GPS fix
+      maximumAge: 0,
       timeout: 10000,
     }
   );
