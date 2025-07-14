@@ -1,5 +1,7 @@
 // ✅ Firebase is already initialized in driver.html
 
+let driverToRouteControl = null;
+
 const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
 const map = L.map("map").setView(schoolLatLng, 12);
 
@@ -138,9 +140,9 @@ function updateDriverLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      const latlng = [pos.coords.latitude, pos.coords.longitude];
+      const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
 
-      // 🔵 Update live driver marker
+      // 🔵 Update marker
       if (driverMarker) map.removeLayer(driverMarker);
       driverMarker = L.circleMarker(latlng, {
         radius: 8,
@@ -151,16 +153,44 @@ function updateDriverLocation() {
         .addTo(map)
         .bindPopup("🚌 Driver Location");
 
-      // 🛣️ Track route
+      // 🛣️ Track polyline route
       driverRoute.push(latlng);
-
-      // 🗺️ Remove old polyline and draw new one
       if (driverPolyline) map.removeLayer(driverPolyline);
       driverPolyline = L.polyline(driverRoute, {
         color: "blue",
         weight: 3,
-        opacity: 0.7,
+        opacity: 0.6,
       }).addTo(map);
+
+      // 🚦 Draw route from driver to nearest student/school point
+      if (waypoints.length > 0) {
+        // Get nearest point
+        let nearest = waypoints[0];
+        let minDist = getDistance(latlng, waypoints[0]);
+        for (let i = 1; i < waypoints.length; i++) {
+          const dist = getDistance(latlng, waypoints[i]);
+          if (dist < minDist) {
+            minDist = dist;
+            nearest = waypoints[i];
+          }
+        }
+
+        // Clear previous driver route if any
+        if (driverToRouteControl) map.removeControl(driverToRouteControl);
+
+        // 🔄 Add route from driver to nearest point
+        driverToRouteControl = L.Routing.control({
+          waypoints: [latlng, nearest],
+          routeWhileDragging: false,
+          draggableWaypoints: false,
+          addWaypoints: false,
+          show: false,
+          lineOptions: {
+            styles: [{ color: "blue", weight: 3, dashArray: "6, 8" }],
+          },
+          createMarker: () => null,
+        }).addTo(map);
+      }
     },
     (err) => console.error("📡 GPS error:", err),
     {
