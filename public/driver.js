@@ -1,3 +1,7 @@
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
 const map = L.map("map").setView(schoolLatLng, 12);
 
