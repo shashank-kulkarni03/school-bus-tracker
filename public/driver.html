@@ -30,11 +30,11 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
 
-    <!-- Firebase SDKs -->
+    <!-- ✅ Load Firebase SDKs FIRST -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <!-- Firebase Config -->
+    <!-- ✅ Then Initialize Firebase -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyDQPblcwF2QLWdXtM2Q8xdESzh4NOVSzP8",
@@ -50,7 +50,7 @@
       firebase.initializeApp(firebaseConfig);
     </script>
 
-    <!-- Your Logic -->
+    <!-- ✅ Your JS Logic Last -->
     <script src="driver.js"></script>
   </body>
 </html>
