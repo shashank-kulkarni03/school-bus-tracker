@@ -1,95 +1,108 @@
-// ✅ Firebase is already initialized in HTML
-
-const studentNameEl = document.getElementById("student-name");
-const yesBtn = document.getElementById("yes");
-const noBtn = document.getElementById("no");
-const submitBtn = document.getElementById("submitBtn");
-
-let willTakeBus = null;
-let lat = null;
-let lng = null;
-
-const user = firebase.auth().currentUser;
-let studentEmail = null;
-let studentName = null;
-
-// Get location
-navigator.geolocation.getCurrentPosition(
-  (pos) => {
-    lat = pos.coords.latitude;
-    lng = pos.coords.longitude;
-    document.getElementById("lat").value = lat;
-    document.getElementById("lng").value = lng;
-  },
-  (err) => {
-    alert("⚠️ Please allow location access.");
-    console.error(err);
-  }
-);
-
-// ✅ Button clicks
-yesBtn.onclick = () => {
-  willTakeBus = true;
-  yesBtn.classList.add("selected");
-  noBtn.classList.remove("selected");
-};
-
-noBtn.onclick = () => {
-  willTakeBus = false;
-  noBtn.classList.add("selected");
-  yesBtn.classList.remove("selected");
-};
-
-submitBtn.onclick = async () => {
-  const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-
-  // ⛔ Restrict time window
-  if (hours < 16 || (hours === 16 && minutes < 30)) {
-    alert("⛔ You can submit only after 4:30 PM.");
-    return;
-  }
-  if (hours === 0) {
-    alert("⛔ Submissions closed after midnight.");
-    return;
-  }
-
-  if (willTakeBus === null || lat === null || lng === null) {
-    alert("⚠️ Please select YES or NO and allow location access.");
-    return;
-  }
-
-  const user = firebase.auth().currentUser;
+firebase.auth().onAuthStateChanged(async function (user) {
   if (!user) {
-    alert("Please login first.");
     window.location.href = "login.html";
     return;
   }
 
-  studentEmail = user.email;
-  studentName = user.displayName || user.email.split("@")[0];
+  const userId = user.uid;
 
-  const timestamp = new Date().toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
+  try {
+    // Get name from users/uid/name
+    const nameSnapshot = await firebase
+      .database()
+      .ref("users/" + userId + "/name")
+      .once("value");
+    const studentName = nameSnapshot.val() || "Student";
+    document.getElementById(
+      "student-name"
+    ).textContent = `Hello, ${studentName}!`;
 
-  // ✅ Erase old data after 4:29 PM (only once per day)
-  const todayKey = new Date().toISOString().split("T")[0]; // e.g., 2025-07-14
-  const cleanupKey = `cleared_${todayKey}`;
+    // 🔄 Check if current time is after 4:29 PM and delete old data
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
-  if (!localStorage.getItem(cleanupKey) && hours >= 16 && minutes >= 30) {
-    await firebase.database().ref("students").remove();
-    localStorage.setItem(cleanupKey, "true");
+    if (currentHour > 16 || (currentHour === 16 && currentMinute >= 29)) {
+      await firebase
+        .database()
+        .ref("students/" + userId)
+        .remove();
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    document.getElementById("student-name").textContent = "Hello, Student!";
+  }
+});
+
+// ✅ Track YES/NO response
+let willTakeBus = null;
+
+document.getElementById("yes").addEventListener("click", () => {
+  willTakeBus = true;
+});
+document.getElementById("no").addEventListener("click", () => {
+  willTakeBus = false;
+});
+
+// ✅ On Submit
+document.getElementById("submitBtn").addEventListener("click", () => {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  if (willTakeBus === null) {
+    alert("Please select YES or NO.");
+    return;
   }
 
-  // ✅ Submit new data
-  await firebase.database().ref("students").child(user.uid).set({
-    name: studentName,
-    email: studentEmail,
-    lat,
-    lng,
-    willTakeBus,
-    timestamp,
-  });
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lng = parseFloat(document.getElementById("lng").value);
 
-  alert("✅ Your response has been recorded.");
-};
+  if (willTakeBus && (isNaN(lat) || isNaN(lng))) {
+    alert("Please allow location access.");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = now.toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
+  const nameText = document
+    .getElementById("student-name")
+    .textContent.replace("Hello, ", "")
+    .replace("!", "");
+
+  firebase
+    .database()
+    .ref("students/" + user.uid)
+    .set({
+      email: user.email,
+      name: nameText,
+      willTakeBus: willTakeBus,
+      lat: lat,
+      lng: lng,
+      timestamp: timestamp,
+    })
+    .then(() => {
+      alert("✅ Response recorded successfully!");
+    })
+    .catch((err) => {
+      console.error("Error saving data:", err);
+      alert("Error saving your response.");
+    });
+});
+
+// 📍 Detect and set location
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      document.getElementById("lat").value = pos.coords.latitude;
+      document.getElementById("lng").value = pos.coords.longitude;
+    },
+    (err) => console.error("Geolocation error:", err),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    }
+  );
+} else {
+  alert("Geolocation not supported on your device.");
+}
