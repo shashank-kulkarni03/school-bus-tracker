@@ -7,7 +7,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // ✅ Get student name from 'users/{uid}/name'
+    // ✅ Get student full name from 'users/{uid}/name'
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
@@ -18,7 +18,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
       "student-name"
     ).textContent = `Hello, ${studentName}!`;
 
-    // 🕒 Clear old data after 4:29 PM
+    // 🕒 Clear previous data after 4:29 PM
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -35,7 +35,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
   }
 });
 
-// ✅ YES/NO selection
+// ✅ YES/NO button selection
 let willTakeBus = null;
 
 document.getElementById("yes").addEventListener("click", () => {
@@ -70,13 +70,14 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
       .once("value");
 
     const fullName = nameSnapshot.val() || "Student";
+    const timestamp = new Date().toLocaleString("en-GB"); // ✅ Correct format
 
     const studentData = {
       name: fullName,
       email: user.email,
       lat: lat,
       lng: lng,
-      timestamp: new Date().toLocaleString("en-GB"), // ✅ Fixed timestamp format
+      timestamp: timestamp, // ✅ Correctly formatted timestamp
       willTakeBus: willTakeBus,
     };
 
