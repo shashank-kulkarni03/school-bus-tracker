@@ -7,18 +7,21 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // ✅ Fetch student name from Firebase
+    // ✅ Get full name from 'users/{uid}/name'
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
       .once("value");
-    const studentName = nameSnapshot.val() || "Student";
 
-    document.getElementById(
-      "student-name"
-    ).textContent = `Hello, ${studentName}!`;
+    const fullName = nameSnapshot.val() || "Student";
 
-    // ✅ Remove old student data after 4:29 PM
+    // ✅ Set in heading
+    document.getElementById("student-name").textContent = `Hello, ${fullName}!`;
+
+    // ✅ Save in memory for later use
+    window.currentStudentName = fullName;
+
+    // ✅ Clear today's old data after 4:29 PM
     const now = new Date();
     const hr = now.getHours();
     const min = now.getMinutes();
@@ -29,12 +32,13 @@ firebase.auth().onAuthStateChanged(async function (user) {
         .remove();
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error fetching name:", error);
     document.getElementById("student-name").textContent = "Hello, Student!";
+    window.currentStudentName = "Student";
   }
 });
 
-// YES/NO buttons
+// ✅ Track YES/NO response
 let willTakeBus = null;
 document.getElementById("yes").addEventListener("click", () => {
   willTakeBus = true;
@@ -43,7 +47,7 @@ document.getElementById("no").addEventListener("click", () => {
   willTakeBus = false;
 });
 
-// SUBMIT button
+// ✅ On Submit
 document.getElementById("submitBtn").addEventListener("click", () => {
   const user = firebase.auth().currentUser;
   if (!user) return;
@@ -63,11 +67,7 @@ document.getElementById("submitBtn").addEventListener("click", () => {
 
   const now = new Date();
   const timestamp = now.toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
-
-  const nameText = document
-    .getElementById("student-name")
-    .textContent.replace("Hello, ", "")
-    .replace("!", "");
+  const nameText = window.currentStudentName || "Student";
 
   firebase
     .database()
@@ -89,7 +89,7 @@ document.getElementById("submitBtn").addEventListener("click", () => {
     });
 });
 
-// 📍 Get location
+// ✅ Detect and set location
 if ("geolocation" in navigator) {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
