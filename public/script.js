@@ -1,108 +1,153 @@
-firebase.auth().onAuthStateChanged(async function (user) {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
+// Role selector
+document.querySelectorAll(".role-option").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    document
+      .querySelectorAll(".role-option")
+      .forEach((el) => el.classList.remove("selected"));
+    this.classList.add("selected");
+    const selectedRole = this.getAttribute("data-role");
+    document.getElementById("role").value = selectedRole;
 
-  const userId = user.uid;
+    const locBtn = document.getElementById("use-location-btn");
+    const confirmBtn = document.getElementById("confirm-location-btn");
+    const map = document.getElementById("map");
 
-  try {
-    // ✅ Get name from users/uid/name in database
-    const nameSnapshot = await firebase
-      .database()
-      .ref("users/" + userId + "/name")
-      .once("value");
-    const studentName = nameSnapshot.val() || "Student";
-    document.getElementById(
-      "student-name"
-    ).textContent = `Hello, ${studentName}!`;
-
-    // 🔄 Delete old data after 4:29 PM
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    if (currentHour > 16 || (currentHour === 16 && currentMinute >= 29)) {
-      await firebase
-        .database()
-        .ref("students/" + userId)
-        .remove();
+    if (selectedRole === "student") {
+      locBtn.style.display = "block";
+    } else {
+      locBtn.style.display = "none";
+      confirmBtn.style.display = "none";
+      map.style.display = "none";
+      document.getElementById("lat").value = "";
+      document.getElementById("lng").value = "";
     }
-  } catch (error) {
-    console.error("Error:", error);
-    document.getElementById("student-name").textContent = "Hello, Student!";
-  }
+  });
 });
 
-// ✅ Track YES/NO response
-let willTakeBus = null;
+// Use My Location + map
+let leafletMap = null;
+let marker = null;
 
-document.getElementById("yes").addEventListener("click", () => {
-  willTakeBus = true;
-});
-document.getElementById("no").addEventListener("click", () => {
-  willTakeBus = false;
-});
+document
+  .getElementById("use-location-btn")
+  .addEventListener("click", function () {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-// ✅ On Submit
-document.getElementById("submitBtn").addEventListener("click", () => {
-  const user = firebase.auth().currentUser;
-  if (!user) return;
+        const mapDiv = document.getElementById("map");
+        mapDiv.style.display = "block";
+        document.getElementById("confirm-location-btn").style.display =
+          "inline-block";
 
-  if (willTakeBus === null) {
-    alert("Please select YES or NO.");
-    return;
-  }
+        if (!leafletMap) {
+          leafletMap = L.map("map").setView([lat, lng], 15);
+          L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          ).addTo(leafletMap);
+          leafletMap.on("click", function (e) {
+            const { lat, lng } = e.latlng;
+            marker.setLatLng([lat, lng]);
+          });
+        } else {
+          leafletMap.setView([lat, lng], 15);
+        }
 
-  const lat = parseFloat(document.getElementById("lat").value);
-  const lng = parseFloat(document.getElementById("lng").value);
+        if (!marker) {
+          marker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+        } else {
+          marker.setLatLng([lat, lng]);
+        }
 
-  if (willTakeBus && (isNaN(lat) || isNaN(lng))) {
-    alert("Please allow location access.");
-    return;
-  }
+        alert(
+          "Drag the marker or click on the map to confirm your location. Then press 'Confirm Location'."
+        );
+      },
+      (err) => {
+        console.error("Location error:", err);
+        alert("Failed to get location.");
+      }
+    );
+  });
 
-  const now = new Date();
-  const timestamp = now.toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
-  const nameText = document
-    .getElementById("student-name")
-    .textContent.replace("Hello, ", "")
-    .replace("!", "");
+// Confirm Location
+document
+  .getElementById("confirm-location-btn")
+  .addEventListener("click", function () {
+    if (marker) {
+      const confirmedLat = marker.getLatLng().lat;
+      const confirmedLng = marker.getLatLng().lng;
 
-  firebase
-    .database()
-    .ref("students/" + user.uid)
-    .set({
-      email: user.email,
-      name: nameText,
-      willTakeBus: willTakeBus,
-      lat: lat,
-      lng: lng,
-      timestamp: timestamp,
-    })
-    .then(() => {
-      alert("✅ Response recorded successfully!");
-    })
-    .catch((err) => {
-      console.error("Error saving data:", err);
-      alert("Error saving your response.");
-    });
-});
+      document.getElementById("lat").value = confirmedLat;
+      document.getElementById("lng").value = confirmedLng;
 
-// 📍 Detect and set location
-if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      document.getElementById("lat").value = pos.coords.latitude;
-      document.getElementById("lng").value = pos.coords.longitude;
-    },
-    (err) => console.error("Geolocation error:", err),
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
+      alert("✅ Location confirmed successfully.");
     }
-  );
-} else {
-  alert("Geolocation not supported on your device.");
-}
+  });
+
+// Register Submit
+document
+  .getElementById("register-form")
+  .addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const selectedRole = document.getElementById("role").value;
+    const lat = document.getElementById("lat").value;
+    const lng = document.getElementById("lng").value;
+    const errorMsg = document.getElementById("error-msg");
+
+    errorMsg.textContent = "";
+
+    if (!name || !email || !password) {
+      errorMsg.textContent = "All fields are required.";
+      return;
+    }
+
+    if (selectedRole === "student" && (!lat || !lng)) {
+      errorMsg.textContent = "Please use and confirm your location.";
+      return;
+    }
+
+    firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+
+        const userData = {
+          uid: user.uid,
+          name,
+          email,
+          role: selectedRole,
+          timestamp: new Date().toISOString(),
+        };
+
+        if (selectedRole === "student") {
+          userData.lat = parseFloat(lat);
+          userData.lng = parseFloat(lng);
+          userData.willTakeBus = null;
+        }
+
+        // ✅ Save data in two places:
+        const db = firebase.database();
+        const updates = [];
+
+        updates.push(
+          db.ref(`${selectedRole}s/${user.uid}`).set(userData),
+          db.ref(`users/${user.uid}`).set({ name: name })
+        );
+
+        Promise.all(updates).then(() => {
+          alert("✅ Registration successful! Redirecting to login...");
+          window.location.href = "login.html";
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        errorMsg.textContent = error.message;
+      });
+  });
