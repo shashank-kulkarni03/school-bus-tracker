@@ -2,14 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Bus Confirmation | XYZ PUBLIC SCHOOL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <h1>XYZ PUBLIC SCHOOL</h1>
-      <h2 id="student-name">Hello, student!</h2>
+      <!-- Removed hardcoded Hello, Student! -->
+      <h2 id="student-name"></h2>
+
       <p class="question">Will you take the bus tomorrow?</p>
 
       <div class="buttons">
@@ -21,7 +23,7 @@
       <br /><br />
       <button id="logoutBtn" class="btn">🚪 Logout</button>
 
-      <!-- hidden location fields -->
+      <!-- Hidden location fields -->
       <input type="hidden" id="lat" />
       <input type="hidden" id="lng" />
     </div>
@@ -31,23 +33,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- Your Firebase config -->
+    <!-- Firebase config -->
     <script src="firebase-config.js"></script>
 
-    <!-- 🔐 Auth check -->
-    <script>
-      firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
-          window.location.href = "login.html";
-        }
-        // No need to set name here — handled in script.js
-      });
-    </script>
+    <!-- Student JS -->
+    <script src="student.js"></script>
 
-    <!-- 🚀 Script -->
-    <script src="script.js"></script>
-
-    <!-- 🚪 Logout -->
+    <!-- Logout -->
     <script>
       document.getElementById("logoutBtn").addEventListener("click", () => {
         firebase
