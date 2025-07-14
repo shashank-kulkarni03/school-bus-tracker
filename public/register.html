@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
     <title>Register - School Bus Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <style>
       body {
         font-family: "Segoe UI", sans-serif;
@@ -123,6 +126,7 @@
         <div class="role-option" data-role="driver">Driver</div>
       </div>
 
+      <!-- Form Starts -->
       <form id="register-form">
         <input type="text" id="name" placeholder="Enter Full Name" required />
         <input type="email" id="username" placeholder="Enter Email" required />
@@ -153,7 +157,8 @@
         <button type="submit" class="btn">Register</button>
         <p id="error-msg" class="error"></p>
       </form>
-      <!-- 🔁 Login link for existing users -->
+
+      <!-- 🔁 Login link -->
       <p style="margin-top: 15px; font-size: 14px">
         Already have an account?
         <a href="login.html" style="color: #0077cc; text-decoration: none"
@@ -169,11 +174,13 @@
       </p>
     </div>
 
-    <!-- Firebase -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="firebase-config.js"></script>
+
+    <!-- Main Script -->
     <script src="register.js"></script>
   </body>
 </html>

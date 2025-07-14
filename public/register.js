@@ -1,4 +1,3 @@
-// Role selector
 document.querySelectorAll(".role-option").forEach((btn) => {
   btn.addEventListener("click", function () {
     document
@@ -8,7 +7,6 @@ document.querySelectorAll(".role-option").forEach((btn) => {
     const selectedRole = this.getAttribute("data-role");
     document.getElementById("role").value = selectedRole;
 
-    // Toggle location input buttons
     const locBtn = document.getElementById("use-location-btn");
     const confirmBtn = document.getElementById("confirm-location-btn");
     const map = document.getElementById("map");
@@ -25,7 +23,6 @@ document.querySelectorAll(".role-option").forEach((btn) => {
   });
 });
 
-// Use My Location + map
 let leafletMap = null;
 let marker = null;
 
@@ -61,18 +58,15 @@ document
           marker.setLatLng([lat, lng]);
         }
 
-        alert(
-          "Drag the marker or click on the map to confirm your location. Then press 'Confirm Location'."
-        );
+        alert("📍 Drag or click on map → then Confirm Location");
       },
       (err) => {
         console.error("Location error:", err);
-        alert("Failed to get location.");
+        alert("❌ Failed to get location.");
       }
     );
   });
 
-// Confirm Location
 document
   .getElementById("confirm-location-btn")
   .addEventListener("click", function () {
@@ -83,11 +77,10 @@ document
       document.getElementById("lat").value = confirmedLat;
       document.getElementById("lng").value = confirmedLng;
 
-      alert("✅ Location confirmed successfully.");
+      alert("✅ Location confirmed!");
     }
   });
 
-// Register Submit
 document
   .getElementById("register-form")
   .addEventListener("submit", function (e) {
@@ -109,7 +102,7 @@ document
     }
 
     if (selectedRole === "student" && (!lat || !lng)) {
-      errorMsg.textContent = "Please use and confirm your location.";
+      errorMsg.textContent = "Please confirm your location.";
       return;
     }
 
@@ -133,7 +126,15 @@ document
           userData.willTakeBus = null;
         }
 
-        firebase.database().ref(`${selectedRole}s/${user.uid}`).set(userData);
+        const db = firebase.database();
+
+        return Promise.all([
+          db.ref(`${selectedRole}s/${user.uid}`).set(userData),
+          db.ref(`users/${user.uid}`).set({ name: name }),
+        ]);
+      })
+      .then(() => {
+        alert("✅ Registered successfully! Redirecting to login...");
         window.location.href = "login.html";
       })
       .catch((error) => {
