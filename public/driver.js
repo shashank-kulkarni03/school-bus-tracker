@@ -75,15 +75,13 @@ async function updateStudentData() {
 
   const now = new Date();
 
-  const lowerLimit = new Date();
-  lowerLimit.setDate(
-    now.getHours() < 18 ? now.getDate() - 2 : now.getDate() - 1
-  );
-  lowerLimit.setHours(18, 0, 0, 0); // Yesterday 6:00 PM
+  // Define start (yesterday 6 PM) and end (today 4:30 PM)
+  const startLimit = new Date();
+  startLimit.setDate(now.getDate() - 1);
+  startLimit.setHours(18, 0, 0, 0); // Yesterday 6:00 PM
 
-  const upperLimit = new Date();
-  upperLimit.setDate(now.getDate());
-  upperLimit.setHours(17, 30, 0, 0); // Today 5:30 PM
+  const endLimit = new Date();
+  endLimit.setHours(16, 30, 0, 0); // Today 4:30 PM
 
   for (const id in students) {
     const s = students[id];
@@ -94,12 +92,8 @@ async function updateStudentData() {
     const [h, min, sec] = timeStr.trim().split(":").map(Number);
     const ts = new Date(y, m - 1, d, h, min, sec);
 
-    if (
-      ts >= lowerLimit &&
-      ts <= upperLimit &&
-      !isNaN(s.lat) &&
-      !isNaN(s.lng)
-    ) {
+    // ✅ Show students only between yesterday 6PM and today 4:30PM
+    if (ts >= startLimit && ts <= endLimit && !isNaN(s.lat) && !isNaN(s.lng)) {
       const latlng = L.latLng(s.lat, s.lng);
       waypoints.push(latlng);
 
