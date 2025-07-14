@@ -1,5 +1,7 @@
 // ✅ Firebase is already initialized in driver.html
 
+let driverToRouteControl = null;
+
 const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
 const map = L.map("map").setView(schoolLatLng, 12);
 
@@ -18,14 +20,12 @@ L.marker(schoolLatLng, { icon: schoolIcon })
   .addTo(map)
   .bindPopup("🏫 Sir MVIT - School Location");
 
-// ✅ Global Variables
 let studentMarkers = [];
 let routingControl = null;
 let driverMarker = null;
 let driverRoute = [];
 let driverPolyline = null;
-let driverToRouteControl = null;
-let waypoints = []; // ✅ now accessible globally
+let waypoints = [];
 
 // 🧠 Distance calc (Haversine)
 function getDistance(p1, p2) {
@@ -73,9 +73,9 @@ function isWithinTimeWindow() {
 async function updateStudentData() {
   if (!isWithinTimeWindow()) return;
 
-  // Remove old markers
   studentMarkers.forEach((m) => map.removeLayer(m));
   studentMarkers = [];
+  waypoints = [];
 
   const snapshot = await firebase.database().ref("students").once("value");
   const students = snapshot.val();
@@ -86,8 +86,6 @@ async function updateStudentData() {
     now.getHours() < 18 ? now.getDate() - 1 : now.getDate()
   );
   sixPMYesterday.setHours(18, 0, 0, 0);
-
-  waypoints = [];
 
   for (const id in students) {
     const s = students[id];
@@ -134,7 +132,7 @@ async function updateStudentData() {
   }
 }
 
-// 🚍 Update driver's location + connect to route
+// 🚍 Update driver's location
 function updateDriverLocation() {
   if (!("geolocation" in navigator)) {
     alert("❌ Geolocation not supported.");
@@ -145,7 +143,6 @@ function updateDriverLocation() {
     (pos) => {
       const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
 
-      // 🔵 Update marker
       if (driverMarker) map.removeLayer(driverMarker);
       driverMarker = L.circleMarker(latlng, {
         radius: 8,
@@ -156,7 +153,6 @@ function updateDriverLocation() {
         .addTo(map)
         .bindPopup("🚌 Driver Location");
 
-      // 🛣️ Track polyline route
       driverRoute.push(latlng);
       if (driverPolyline) map.removeLayer(driverPolyline);
       driverPolyline = L.polyline(driverRoute, {
@@ -165,7 +161,6 @@ function updateDriverLocation() {
         opacity: 0.6,
       }).addTo(map);
 
-      // 🚦 Draw route from driver to nearest student/school point
       if (waypoints.length > 0) {
         let nearest = waypoints[0];
         let minDist = getDistance(latlng, waypoints[0]);
@@ -181,6 +176,9 @@ function updateDriverLocation() {
 
         driverToRouteControl = L.Routing.control({
           waypoints: [latlng, nearest],
+          router: new L.Routing.OSRMv1({
+            serviceUrl: "https://router.project-osrm.org/route/v1",
+          }),
           routeWhileDragging: false,
           draggableWaypoints: false,
           addWaypoints: false,
@@ -201,8 +199,7 @@ function updateDriverLocation() {
   );
 }
 
-// 🕒 Refresh intervals
-updateStudentData(); // Run once initially
-updateDriverLocation(); // Run once initially
-setInterval(updateDriverLocation, 10000); // every 10 seconds
-setInterval(updateStudentData, 2 * 60 * 1000); // every 2 minutes
+updateStudentData();
+updateDriverLocation();
+setInterval(updateDriverLocation, 10000); // every 10s
+setInterval(updateStudentData, 2 * 60 * 1000); // every 2 mins
