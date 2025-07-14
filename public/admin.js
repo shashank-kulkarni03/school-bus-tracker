@@ -31,17 +31,23 @@ document.addEventListener("DOMContentLoaded", function () {
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "dayGridMonth",
       dateClick: function (info) {
-        const selectedDate = info.dateStr;
-        const dateObj = new Date(selectedDate);
-        const formattedDate = dateObj
+        const selectedDate = new Date(info.dateStr);
+        const formattedDate = selectedDate
           .toLocaleDateString("en-GB")
           .split("/")
           .join("-");
-
         selectedDateEl.textContent = formattedDate;
+
         document
           .getElementById("status-container")
           .scrollIntoView({ behavior: "smooth" });
+
+        const sixPMYesterday = new Date(selectedDate);
+        sixPMYesterday.setDate(sixPMYesterday.getDate() - 1);
+        sixPMYesterday.setHours(18, 0, 0, 0);
+
+        const fivePMToday = new Date(selectedDate);
+        fivePMToday.setHours(17, 0, 0, 0);
 
         firebase
           .database()
@@ -54,22 +60,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
             snapshot.forEach((child) => {
               const data = child.val();
-              const entryDate = data.timestamp?.split(",")[0] || "";
-              const entryDateFormatted = new Date(entryDate).toLocaleDateString(
-                "en-GB"
-              );
+              if (!data.timestamp || !data.willTakeBus) return;
 
-              if (
-                entryDateFormatted === dateObj.toLocaleDateString("en-GB") &&
-                data.willTakeBus
-              ) {
+              const [dateStr, timeStr] = data.timestamp.split(",");
+              const [d, m, y] = dateStr.trim().split("/").map(Number);
+              const [h, min, sec] = timeStr.trim().split(":").map(Number);
+              const ts = new Date(y, m - 1, d, h, min, sec);
+
+              if (ts >= sixPMYesterday && ts <= fivePMToday) {
                 count++;
                 rows += `<tr>
-                <td>${si++}</td>
-                <td>${data.name || "-"}</td>
-                <td>${data.email || "-"}</td>
-                <td>${data.timestamp || "-"}</td>
-              </tr>`;
+                  <td>${si++}</td>
+                  <td>${data.name || "-"}</td>
+                  <td>${data.email || "-"}</td>
+                  <td>${data.timestamp || "-"}</td>
+                </tr>`;
               }
             });
 
