@@ -3,17 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <title>Admin Panel - School Bus Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- FullCalendar CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
       rel="stylesheet"
     />
+
     <style>
       body {
         margin: 0;
         font-family: "Segoe UI", sans-serif;
         background: #f9f9f9;
       }
-
       header {
         background: #007bff;
         color: white;
@@ -21,12 +24,10 @@
         font-size: 1.5rem;
         text-align: center;
       }
-
       #calendar {
         max-width: 900px;
         margin: 20px auto;
       }
-
       #status-container {
         margin: 40px auto;
         max-width: 900px;
@@ -35,7 +36,6 @@
         background: white;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
-
       .student-list {
         display: none;
         margin-top: 20px;
@@ -43,31 +43,26 @@
         padding: 15px;
         border-radius: 8px;
       }
-
       .actions {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
         margin-top: 10px;
       }
-
       button {
         padding: 8px 16px;
         border: none;
         border-radius: 6px;
         cursor: pointer;
       }
-
       .print-btn {
         background: #28a745;
         color: white;
       }
-
       .close-btn {
         background: #dc3545;
         color: white;
       }
-
       #detail-link {
         color: #007bff;
         cursor: pointer;
@@ -75,30 +70,25 @@
         margin-top: 10px;
         display: inline-block;
       }
-
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
       }
-
       table th,
       table td {
         border: 1px solid #ccc;
         padding: 8px;
         text-align: left;
       }
-
       @media print {
         body * {
           visibility: hidden;
         }
-
         #status-container,
         #status-container * {
           visibility: visible;
         }
-
         .close-btn,
         #calendar,
         #detail-link {
@@ -142,33 +132,14 @@
       </div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase & FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- Your Firebase config -->
     <script src="firebase-config.js"></script>
-
-    <!-- 🔐 Access control -->
-    <script>
-      firebase.auth().onAuthStateChanged((user) => {
-        const allowedAdminEmail = "admin@example.com"; // 🔁 CHANGE TO YOUR ADMIN EMAIL
-
-        if (!user) {
-          // Not logged in
-          window.location.href = "login.html";
-        } else if (user.email !== allowedAdminEmail) {
-          alert("❌ Access denied! Only admin can access this page.");
-          firebase
-            .auth()
-            .signOut()
-            .then(() => {
-              window.location.href = "login.html";
-            });
-        }
-      });
-    </script>
-
     <script src="admin.js"></script>
   </body>
 </html>
