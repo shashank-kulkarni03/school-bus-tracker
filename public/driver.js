@@ -1,18 +1,3 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyDQPblcwF2QLWdXtM2Q8xdESzh4NOVSzP8",
-  authDomain: "school-bus-tracker-e6a1d.firebaseapp.com",
-  databaseURL:
-    "https://school-bus-tracker-e6a1d-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  projectId: "school-bus-tracker-e6a1d",
-  storageBucket: "school-bus-tracker-e6a1d.appspot.com",
-  messagingSenderId: "610506187838",
-  appId: "1:610506187838:web:c5e0988b8539d2baae9d6f",
-};
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
 const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
 const map = L.map("map").setView(schoolLatLng, 12);
 
