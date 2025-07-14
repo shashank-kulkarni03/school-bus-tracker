@@ -151,7 +151,11 @@ function updateDriverLocation() {
         .bindPopup("🚌 Driver Location");
     },
     (err) => console.error("📡 GPS error:", err),
-    { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0, // ⬅️ Use fresh GPS fix
+      timeout: 10000,
+    }
   );
 }
 
