@@ -1,7 +1,5 @@
 // ✅ Firebase is already initialized in driver.html
 
-let driverToRouteControl = null;
-
 const schoolLatLng = [13.1007, 77.5963]; // Sir MVIT
 const map = L.map("map").setView(schoolLatLng, 12);
 
@@ -20,9 +18,14 @@ L.marker(schoolLatLng, { icon: schoolIcon })
   .addTo(map)
   .bindPopup("🏫 Sir MVIT - School Location");
 
+// ✅ Global Variables
 let studentMarkers = [];
 let routingControl = null;
 let driverMarker = null;
+let driverRoute = [];
+let driverPolyline = null;
+let driverToRouteControl = null;
+let waypoints = []; // ✅ now accessible globally
 
 // 🧠 Distance calc (Haversine)
 function getDistance(p1, p2) {
@@ -84,7 +87,7 @@ async function updateStudentData() {
   );
   sixPMYesterday.setHours(18, 0, 0, 0);
 
-  const waypoints = [];
+  waypoints = [];
 
   for (const id in students) {
     const s = students[id];
@@ -131,7 +134,7 @@ async function updateStudentData() {
   }
 }
 
-// 🚍 Update driver's location
+// 🚍 Update driver's location + connect to route
 function updateDriverLocation() {
   if (!("geolocation" in navigator)) {
     alert("❌ Geolocation not supported.");
@@ -164,7 +167,6 @@ function updateDriverLocation() {
 
       // 🚦 Draw route from driver to nearest student/school point
       if (waypoints.length > 0) {
-        // Get nearest point
         let nearest = waypoints[0];
         let minDist = getDistance(latlng, waypoints[0]);
         for (let i = 1; i < waypoints.length; i++) {
@@ -175,10 +177,8 @@ function updateDriverLocation() {
           }
         }
 
-        // Clear previous driver route if any
         if (driverToRouteControl) map.removeControl(driverToRouteControl);
 
-        // 🔄 Add route from driver to nearest point
         driverToRouteControl = L.Routing.control({
           waypoints: [latlng, nearest],
           routeWhileDragging: false,
