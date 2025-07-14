@@ -1,33 +1,30 @@
 document.addEventListener("DOMContentLoaded", function () {
   const allowedAdminEmail = "adminanna@gmail.com";
 
-  // Wait for Firebase to initialize completely
-  const checkAuthInterval = setInterval(() => {
-    const user = firebase.auth().currentUser;
-
-    if (user === null) return; // not yet loaded
-
-    clearInterval(checkAuthInterval); // Stop checking once we get user
-
+  firebase.auth().onAuthStateChanged(function (user) {
     if (!user) {
-      alert("Access denied. Please login as admin first.");
+      alert("Access denied. Please login as admin.");
       window.location.href = "login.html";
       return;
     }
 
     if (user.email !== allowedAdminEmail) {
       alert("Access denied. You are not authorized as admin.");
-      firebase.auth().signOut();
-      window.location.href = "login.html";
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          window.location.href = "login.html";
+        });
       return;
     }
 
-    // ✅ AUTHORIZED USER - Proceed with rest
-    initializeAdminPanel();
-  }, 500); // check every 500ms
+    // ✅ Admin authenticated — load calendar panel
+    setupAdminPanel();
+  });
 });
 
-function initializeAdminPanel() {
+function setupAdminPanel() {
   const calendarEl = document.getElementById("calendar");
   const selectedDateEl = document.getElementById("selected-date");
   const totalCountEl = document.getElementById("total-count");
@@ -43,10 +40,9 @@ function initializeAdminPanel() {
       const formattedDate = dateObj
         .toLocaleDateString("en-GB")
         .split("/")
-        .join("-"); // DD-MM-YYYY
+        .join("-");
 
       selectedDateEl.textContent = formattedDate;
-
       document
         .getElementById("status-container")
         .scrollIntoView({ behavior: "smooth" });
@@ -72,11 +68,11 @@ function initializeAdminPanel() {
             ) {
               count++;
               rows += `<tr>
-                <td>${si++}</td>
-                <td>${data.name || "-"}</td>
-                <td>${data.email || "-"}</td>
-                <td>${data.timestamp || "-"}</td>
-              </tr>`;
+              <td>${si++}</td>
+              <td>${data.name || "-"}</td>
+              <td>${data.email || "-"}</td>
+              <td>${data.timestamp || "-"}</td>
+            </tr>`;
             }
           });
 
