@@ -2,15 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Student Bus Confirmation | XYZ PUBLIC SCHOOL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Bus Confirmation | XYZ PUBLIC SCHOOL</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <h1>XYZ PUBLIC SCHOOL</h1>
       <h2 id="student-name">Loading name...</h2>
-
       <p class="question">Will you take the bus tomorrow?</p>
 
       <div class="buttons">
@@ -22,7 +21,7 @@
       <br /><br />
       <button id="logoutBtn" class="btn">🚪 Logout</button>
 
-      <!-- Hidden location fields -->
+      <!-- hidden location fields -->
       <input type="hidden" id="lat" />
       <input type="hidden" id="lng" />
     </div>
@@ -35,10 +34,10 @@
     <!-- Firebase config -->
     <script src="firebase-config.js"></script>
 
-    <!-- Script -->
-    <script src="student.js"></script>
+    <!-- 🚀 Script -->
+    <script src="script.js"></script>
 
-    <!-- Logout -->
+    <!-- 🚪 Logout -->
     <script>
       document.getElementById("logoutBtn").addEventListener("click", () => {
         firebase

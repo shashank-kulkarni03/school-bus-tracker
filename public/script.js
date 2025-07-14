@@ -7,7 +7,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // ✅ Get full name from 'users/{uid}/name'
+    // Fetch full name from "users/{uid}/name"
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
@@ -15,31 +15,29 @@ firebase.auth().onAuthStateChanged(async function (user) {
 
     const fullName = nameSnapshot.val() || "Student";
 
-    // ✅ Set in heading
-    document.getElementById("student-name").textContent = `Hello, ${fullName}!`;
-
-    // ✅ Save in memory for later use
-    window.currentStudentName = fullName;
-
-    // ✅ Clear today's old data after 4:29 PM
-    const now = new Date();
-    const hr = now.getHours();
-    const min = now.getMinutes();
-    if (hr > 16 || (hr === 16 && min >= 29)) {
-      await firebase
-        .database()
-        .ref("students/" + userId)
-        .remove();
-    }
+    document.getElementById("student-name").textContent = `Hello ${fullName}!`;
+    window.currentStudentName = fullName; // used in submit
   } catch (error) {
     console.error("Error fetching name:", error);
-    document.getElementById("student-name").textContent = "Hello, Student!";
+    document.getElementById("student-name").textContent = "Hello Student!";
     window.currentStudentName = "Student";
+  }
+
+  // Optional: Remove old data after 4:29 PM
+  const now = new Date();
+  const hr = now.getHours();
+  const min = now.getMinutes();
+  if (hr > 16 || (hr === 16 && min >= 29)) {
+    await firebase
+      .database()
+      .ref("students/" + userId)
+      .remove();
   }
 });
 
-// ✅ Track YES/NO response
+// ✅ Track YES/NO
 let willTakeBus = null;
+
 document.getElementById("yes").addEventListener("click", () => {
   willTakeBus = true;
 });
@@ -47,7 +45,7 @@ document.getElementById("no").addEventListener("click", () => {
   willTakeBus = false;
 });
 
-// ✅ On Submit
+// ✅ Submit response
 document.getElementById("submitBtn").addEventListener("click", () => {
   const user = firebase.auth().currentUser;
   if (!user) return;
@@ -67,29 +65,29 @@ document.getElementById("submitBtn").addEventListener("click", () => {
 
   const now = new Date();
   const timestamp = now.toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
-  const nameText = window.currentStudentName || "Student";
+  const name = window.currentStudentName || "Student";
 
   firebase
     .database()
     .ref("students/" + user.uid)
     .set({
       email: user.email,
-      name: nameText,
-      willTakeBus: willTakeBus,
       lat: lat,
       lng: lng,
+      name: name,
       timestamp: timestamp,
+      willTakeBus: willTakeBus,
     })
     .then(() => {
       alert("✅ Response recorded successfully!");
     })
     .catch((err) => {
       console.error("Error saving data:", err);
-      alert("❌ Error saving your response.");
+      alert("Error saving your response.");
     });
 });
 
-// ✅ Detect and set location
+// 📍 Get Location
 if ("geolocation" in navigator) {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
