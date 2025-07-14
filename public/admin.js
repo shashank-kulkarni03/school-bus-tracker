@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   const allowedAdminEmail = "adminanna@gmail.com";
 
-  // Wait for Firebase auth state
   firebase.auth().onAuthStateChanged(function (user) {
     if (!user) {
       window.location.href = "login.html";
@@ -18,11 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // ✅ If admin verified, initialize calendar logic
-    initializeAdminPanel();
+    initAdminPanel(); // ✅ Authorized, show panel
   });
 
-  function initializeAdminPanel() {
+  function initAdminPanel() {
     const calendarEl = document.getElementById("calendar");
     const selectedDateEl = document.getElementById("selected-date");
     const totalCountEl = document.getElementById("total-count");
