@@ -7,35 +7,35 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // Fetch full name from "users/{uid}/name"
+    // ✅ Get student name from 'users/{uid}/name'
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
       .once("value");
 
-    const fullName = nameSnapshot.val() || "Student";
+    const studentName = nameSnapshot.val() || "Student";
+    document.getElementById(
+      "student-name"
+    ).textContent = `Hello, ${studentName}!`;
 
-    document.getElementById("student-name").textContent = `Hello ${fullName}!`;
-    window.currentStudentName = fullName; // used in submit
+    // 🕒 Clear old data after 4:29 PM
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    if (currentHour > 16 || (currentHour === 16 && currentMinute >= 29)) {
+      await firebase
+        .database()
+        .ref("students/" + userId)
+        .remove();
+    }
   } catch (error) {
-    console.error("Error fetching name:", error);
-    document.getElementById("student-name").textContent = "Hello Student!";
-    window.currentStudentName = "Student";
-  }
-
-  // Optional: Remove old data after 4:29 PM
-  const now = new Date();
-  const hr = now.getHours();
-  const min = now.getMinutes();
-  if (hr > 16 || (hr === 16 && min >= 29)) {
-    await firebase
-      .database()
-      .ref("students/" + userId)
-      .remove();
+    console.error("Error:", error);
+    document.getElementById("student-name").textContent = "Hello, Student!";
   }
 });
 
-// ✅ Track YES/NO
+// ✅ YES/NO selection
 let willTakeBus = null;
 
 document.getElementById("yes").addEventListener("click", () => {
@@ -46,7 +46,7 @@ document.getElementById("no").addEventListener("click", () => {
 });
 
 // ✅ Submit response
-document.getElementById("submitBtn").addEventListener("click", () => {
+document.getElementById("submitBtn").addEventListener("click", async () => {
   const user = firebase.auth().currentUser;
   if (!user) return;
 
@@ -63,31 +63,36 @@ document.getElementById("submitBtn").addEventListener("click", () => {
     return;
   }
 
-  const now = new Date();
-  const timestamp = now.toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
-  const name = window.currentStudentName || "Student";
+  try {
+    const nameSnapshot = await firebase
+      .database()
+      .ref("users/" + user.uid + "/name")
+      .once("value");
 
-  firebase
-    .database()
-    .ref("students/" + user.uid)
-    .set({
+    const fullName = nameSnapshot.val() || "Student";
+
+    const studentData = {
+      name: fullName,
       email: user.email,
       lat: lat,
       lng: lng,
-      name: name,
-      timestamp: timestamp,
+      timestamp: new Date().toLocaleString("en-GB"), // ✅ Fixed timestamp format
       willTakeBus: willTakeBus,
-    })
-    .then(() => {
-      alert("✅ Response recorded successfully!");
-    })
-    .catch((err) => {
-      console.error("Error saving data:", err);
-      alert("Error saving your response.");
-    });
+    };
+
+    await firebase
+      .database()
+      .ref("students/" + user.uid)
+      .set(studentData);
+
+    alert("✅ Response recorded successfully!");
+  } catch (error) {
+    console.error("Error saving data:", error);
+    alert("Error saving your response.");
+  }
 });
 
-// 📍 Get Location
+// 📍 Get location
 if ("geolocation" in navigator) {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
@@ -102,5 +107,5 @@ if ("geolocation" in navigator) {
     }
   );
 } else {
-  alert("Geolocation not supported.");
+  alert("Geolocation not supported on your device.");
 }
