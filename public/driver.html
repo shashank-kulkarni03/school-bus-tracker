@@ -14,13 +14,26 @@
 
     <style>
       html,
-      body,
-      #map {
+      body {
         height: 100%;
         margin: 0;
         padding: 0;
         font-family: Arial, sans-serif;
       }
+
+      #map {
+        height: 100%;
+        width: 100%;
+        display: none;
+      }
+
+      #auth-check {
+        text-align: center;
+        padding-top: 40vh;
+        font-size: 1.5rem;
+        color: #555;
+      }
+
       #logoutBtn {
         position: fixed;
         bottom: 15px;
@@ -31,11 +44,17 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+        display: none;
         z-index: 9999;
       }
     </style>
+  </head>
+  <body>
+    <div id="auth-check">🔒 Checking login...</div>
+    <div id="map"></div>
+    <button id="logoutBtn" onclick="logout()">Logout</button>
 
-    <!-- Firebase Auth Check -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script>
@@ -44,34 +63,37 @@
         authDomain: "school-bus-tracker-e6a1d.firebaseapp.com",
       };
 
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
+      firebase.initializeApp(firebaseConfig);
 
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (!user) {
-          alert("🚫 Access Denied. Please login first.");
-          window.location.href = "login.html"; // redirect to login
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          // ✅ Logged in — show map and load scripts
+          document.getElementById("auth-check").style.display = "none";
+          document.getElementById("map").style.display = "block";
+          document.getElementById("logoutBtn").style.display = "block";
+
+          // Load Leaflet scripts
+          const leafletJS = document.createElement("script");
+          leafletJS.src = "https://unpkg.com/leaflet/dist/leaflet.js";
+          document.head.appendChild(leafletJS);
+
+          const routingJS = document.createElement("script");
+          routingJS.src =
+            "https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js";
+          document.head.appendChild(routingJS);
+
+          // After slight delay, load driver.js
+          setTimeout(() => {
+            const driverJS = document.createElement("script");
+            driverJS.src = "driver.js";
+            document.body.appendChild(driverJS);
+          }, 500);
+        } else {
+          // ❌ Not logged in — redirect
+          window.location.href = "login.html";
         }
       });
-    </script>
-  </head>
-  <body>
-    <div id="map"></div>
 
-    <button id="logoutBtn" onclick="logout()">Logout</button>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-
-    <!-- Firebase Database -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <!-- Your Driver Map Logic -->
-    <script src="driver.js"></script>
-
-    <script>
       function logout() {
         firebase
           .auth()
