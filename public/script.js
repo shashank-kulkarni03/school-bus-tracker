@@ -1,86 +1,95 @@
-firebase.auth().onAuthStateChanged(function (user) {
-  if (!user) {
-    window.location.href = "login.html"; // Redirect if not logged in
+// ✅ Firebase is already initialized in HTML
+
+const studentNameEl = document.getElementById("student-name");
+const yesBtn = document.getElementById("yes");
+const noBtn = document.getElementById("no");
+const submitBtn = document.getElementById("submitBtn");
+
+let willTakeBus = null;
+let lat = null;
+let lng = null;
+
+const user = firebase.auth().currentUser;
+let studentEmail = null;
+let studentName = null;
+
+// Get location
+navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    lat = pos.coords.latitude;
+    lng = pos.coords.longitude;
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
+  },
+  (err) => {
+    alert("⚠️ Please allow location access.");
+    console.error(err);
+  }
+);
+
+// ✅ Button clicks
+yesBtn.onclick = () => {
+  willTakeBus = true;
+  yesBtn.classList.add("selected");
+  noBtn.classList.remove("selected");
+};
+
+noBtn.onclick = () => {
+  willTakeBus = false;
+  noBtn.classList.add("selected");
+  yesBtn.classList.remove("selected");
+};
+
+submitBtn.onclick = async () => {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+
+  // ⛔ Restrict time window
+  if (hours < 16 || (hours === 16 && minutes < 30)) {
+    alert("⛔ You can submit only after 4:30 PM.");
+    return;
+  }
+  if (hours === 0) {
+    alert("⛔ Submissions closed after midnight.");
     return;
   }
 
-  const studentId = user.uid;
-  const studentNameEl = document.getElementById("student-name");
-  const yesBtn = document.getElementById("yes");
-  const noBtn = document.getElementById("no");
-  const submitBtn = document.getElementById("submitBtn");
-  const latInput = document.getElementById("lat");
-  const lngInput = document.getElementById("lng");
-
-  // 🧑 Fetch student name from Firebase
-  firebase
-    .database()
-    .ref("students/" + studentId)
-    .once("value")
-    .then((snapshot) => {
-      const data = snapshot.val();
-      if (data && data.name) {
-        studentNameEl.textContent = `Hello, ${data.name}!`;
-      } else {
-        studentNameEl.textContent = "Hello, Student!";
-      }
-    });
-
-  let willTakeBus = null;
-
-  yesBtn.addEventListener("click", () => {
-    willTakeBus = true;
-    yesBtn.classList.add("active");
-    noBtn.classList.remove("active");
-  });
-
-  noBtn.addEventListener("click", () => {
-    willTakeBus = false;
-    noBtn.classList.add("active");
-    yesBtn.classList.remove("active");
-  });
-
-  submitBtn.addEventListener("click", () => {
-    if (willTakeBus === null) {
-      alert("Please select YES or NO.");
-      return;
-    }
-
-    const lat = parseFloat(latInput.value);
-    const lng = parseFloat(lngInput.value);
-
-    const now = new Date();
-    const timestamp =
-      now.toLocaleDateString("en-GB") + ", " + now.toLocaleTimeString("en-GB");
-
-    firebase
-      .database()
-      .ref("students/" + studentId)
-      .update({
-        willTakeBus: willTakeBus,
-        lat: isNaN(lat) ? null : lat,
-        lng: isNaN(lng) ? null : lng,
-        timestamp: timestamp,
-      })
-      .then(() => {
-        alert("Response submitted!");
-      })
-      .catch((error) => {
-        console.error("Submission error:", error);
-        alert("Something went wrong. Try again.");
-      });
-  });
-
-  // 📍 Get location
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        latInput.value = pos.coords.latitude;
-        lngInput.value = pos.coords.longitude;
-      },
-      (err) => {
-        console.warn("Location not allowed or failed.");
-      }
-    );
+  if (willTakeBus === null || lat === null || lng === null) {
+    alert("⚠️ Please select YES or NO and allow location access.");
+    return;
   }
-});
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("Please login first.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  studentEmail = user.email;
+  studentName = user.displayName || user.email.split("@")[0];
+
+  const timestamp = new Date().toLocaleString("en-GB"); // DD/MM/YYYY, HH:mm:ss
+
+  // ✅ Erase old data after 4:29 PM (only once per day)
+  const todayKey = new Date().toISOString().split("T")[0]; // e.g., 2025-07-14
+  const cleanupKey = `cleared_${todayKey}`;
+
+  if (!localStorage.getItem(cleanupKey) && hours >= 16 && minutes >= 30) {
+    await firebase.database().ref("students").remove();
+    localStorage.setItem(cleanupKey, "true");
+  }
+
+  // ✅ Submit new data
+  await firebase.database().ref("students").child(user.uid).set({
+    name: studentName,
+    email: studentEmail,
+    lat,
+    lng,
+    willTakeBus,
+    timestamp,
+  });
+
+  alert("✅ Your response has been recorded.");
+};
