@@ -7,7 +7,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // Get name from users/uid/name
+    // ✅ Get name from users/uid/name in database
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
@@ -17,7 +17,7 @@ firebase.auth().onAuthStateChanged(async function (user) {
       "student-name"
     ).textContent = `Hello, ${studentName}!`;
 
-    // 🔄 Check if current time is after 4:29 PM and delete old data
+    // 🔄 Delete old data after 4:29 PM
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
