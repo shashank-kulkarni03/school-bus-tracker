@@ -142,10 +142,33 @@
       </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+
+    <!-- 🔐 Access control -->
+    <script>
+      firebase.auth().onAuthStateChanged((user) => {
+        const allowedAdminEmail = "admin@example.com"; // 🔁 CHANGE TO YOUR ADMIN EMAIL
+
+        if (!user) {
+          // Not logged in
+          window.location.href = "login.html";
+        } else if (user.email !== allowedAdminEmail) {
+          alert("❌ Access denied! Only admin can access this page.");
+          firebase
+            .auth()
+            .signOut()
+            .then(() => {
+              window.location.href = "login.html";
+            });
+        }
+      });
+    </script>
+
     <script src="admin.js"></script>
   </body>
 </html>
