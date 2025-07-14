@@ -56,6 +56,7 @@ const firebaseConfig = {
 
 ## Sample Folder Structure:
 /public
+
 ├── index.html
 
 ├── login.html / login.js
