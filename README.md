@@ -1,4 +1,4 @@
- ##School Bus Route Optimization
+ ## School Bus Route Optimization
 
 An intelligent web-based system that optimizes school bus routes in real time based on student attendance and location, aiming to reduce fuel usage and travel time.
 
