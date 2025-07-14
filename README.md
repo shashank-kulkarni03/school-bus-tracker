@@ -57,15 +57,25 @@ const firebaseConfig = {
 ## Sample Folder Structure:
 /public
 ├── index.html
+
 ├── login.html / login.js
+
 ├── register.html / register.js
+
 ├── admin.html / admin.js
+
 ├── driver.html / driver.js
+
 ├── student.html
+
 ├── script.js
+
 ├── style.css
+
 ├── firebase-config.js
+
 ├── lrm-openrouteservice.js
+
 ├── netlify.toml
 
 ## Roadmap
