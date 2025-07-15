@@ -134,9 +134,12 @@ document
         ]);
       })
       .then(() => {
-        alert("✅ Registered successfully! Redirecting to login...");
-        window.location.href = "login.html";
+        alert("✅ Registered successfully!");
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 500);
       })
+
       .catch((error) => {
         console.error(error);
         errorMsg.textContent = error.message;
