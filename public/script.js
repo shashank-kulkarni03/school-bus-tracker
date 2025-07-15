@@ -8,15 +8,12 @@ firebase.auth().onAuthStateChanged(async function (user) {
   const userId = user.uid;
 
   try {
-    // ✅ Fetch name from users/userId/name
     const nameSnapshot = await firebase
       .database()
       .ref("users/" + userId + "/name")
       .once("value");
 
     const studentName = nameSnapshot.val() || "Student";
-
-    // ✅ Set name on page
     document.getElementById(
       "student-name"
     ).textContent = `Hello, ${studentName}!`;
@@ -26,18 +23,16 @@ firebase.auth().onAuthStateChanged(async function (user) {
   }
 });
 
-// ✅ Track YES/NO selection
+// ✅ YES/NO Selection
 let willTakeBus = null;
-
 document.getElementById("yes").addEventListener("click", () => {
   willTakeBus = true;
 });
-
 document.getElementById("no").addEventListener("click", () => {
   willTakeBus = false;
 });
 
-// ✅ Handle Submit
+// ✅ Handle Submit with time check and location
 document.getElementById("submitBtn").addEventListener("click", async () => {
   const user = firebase.auth().currentUser;
   if (!user) return;
@@ -47,37 +42,57 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     return;
   }
 
-  try {
-    // ✅ Fetch full name
-    const nameSnapshot = await firebase
-      .database()
-      .ref("users/" + user.uid + "/name")
-      .once("value");
+  // 🕟 Validate time: Only between 4:30 PM and 12:00 AM
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
 
-    const studentName = nameSnapshot.val() || "Student";
+  const after430 = hours > 16 || (hours === 16 && minutes >= 30);
+  const beforeMidnight = hours < 24;
 
-    // ✅ Format timestamp in en-GB (DD/MM/YYYY, HH:mm:ss)
-    const timestamp = new Date().toLocaleString("en-GB", {
-      timeZone: "Asia/Kolkata",
-    });
-
-    // ✅ Final data
-    const studentData = {
-      name: studentName,
-      email: user.email,
-      timestamp: timestamp,
-      willTakeBus: willTakeBus,
-    };
-
-    // ✅ Save to database
-    await firebase
-      .database()
-      .ref("students/" + user.uid)
-      .set(studentData);
-
-    alert("✅ Response recorded successfully!");
-  } catch (error) {
-    console.error("Error saving response:", error);
-    alert("Error saving your response.");
+  if (!(after430 && beforeMidnight)) {
+    alert("❌ Submission allowed only between 4:30 PM and 12:00 AM.");
+    return;
   }
+
+  // 🌍 Try to get geolocation
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      try {
+        const nameSnapshot = await firebase
+          .database()
+          .ref("users/" + user.uid + "/name")
+          .once("value");
+
+        const studentName = nameSnapshot.val() || "Student";
+        const timestamp = new Date().toLocaleString("en-GB", {
+          timeZone: "Asia/Kolkata",
+        });
+
+        const studentData = {
+          name: studentName,
+          email: user.email,
+          timestamp: timestamp,
+          willTakeBus: willTakeBus,
+          lat: lat,
+          lng: lng,
+        };
+
+        await firebase
+          .database()
+          .ref("students/" + user.uid)
+          .set(studentData);
+        alert("✅ Response with location saved successfully!");
+      } catch (error) {
+        console.error("Error saving response:", error);
+        alert("Error saving your response.");
+      }
+    },
+    (error) => {
+      alert("❌ Location access denied. Please enable GPS and try again.");
+    }
+  );
 });

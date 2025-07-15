@@ -17,23 +17,25 @@
         <button id="no" class="btn red">NO</button>
       </div>
 
+      <!-- 📍 Location Button -->
+      <button onclick="getLocation()" class="btn">📍 Use My Location</button>
+
+      <br /><br />
       <button id="submitBtn" class="btn submit">SUBMIT</button>
       <br /><br />
       <button id="logoutBtn" class="btn">🚪 Logout</button>
-
-      <!-- Removed: location fields, map, location detection -->
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- ✅ Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- Config and Script -->
+    <!-- ✅ Firebase Config and JS -->
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 
-    <!-- Logout -->
+    <!-- ✅ Logout Button -->
     <script>
       document.getElementById("logoutBtn").addEventListener("click", () => {
         firebase
@@ -43,6 +45,18 @@
             window.location.href = "login.html";
           });
       });
+
+      // 📍 Simple Location Test Trigger
+      function getLocation() {
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            alert("✅ Location detected successfully.");
+          },
+          () => {
+            alert("❌ Location access denied. Please enable GPS.");
+          }
+        );
+      }
     </script>
   </body>
 </html>
