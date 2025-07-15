@@ -1,3 +1,11 @@
+firebase.auth().onAuthStateChanged(async function (user) {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  // ... rest of the code
+});
+
 // ✅ Firebase Auth and Name Fetch
 firebase.auth().onAuthStateChanged(async function (user) {
   if (!user) {
