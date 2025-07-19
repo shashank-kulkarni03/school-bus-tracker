@@ -73,6 +73,7 @@ h1 {
 .btn.submit:hover {
   background-color: #0056b3;
 }
+
 .login-container {
   background: #ffffff;
   padding: 40px;
@@ -120,4 +121,19 @@ h1 {
   color: red;
   font-size: 14px;
   margin-top: 10px;
+}
+
+/* ✅ YES/NO Toggle Mutual Fade Effect */
+.btn.faded-green {
+  background-color: #c8e6c9 !important; /* Light green */
+  color: #2e7d32 !important;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.btn.faded-red {
+  background-color: #ffcdd2 !important; /* Light red */
+  color: #c62828 !important;
+  opacity: 0.7;
+  pointer-events: none;
 }
