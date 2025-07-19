@@ -2,61 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Student Bus Confirmation | XYZ PUBLIC SCHOOL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Panel - School Bus Tracker</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   </head>
   <body>
     <div class="container">
-      <h1>XYZ PUBLIC SCHOOL</h1>
-      <h2 id="student-name">Hello, Student!</h2>
+      <h1 id="student-name">Hello, student!</h1>
       <p class="question">Will you take the bus tomorrow?</p>
-
       <div class="buttons">
-        <button id="yes" class="btn green">YES</button>
-        <button id="no" class="btn red">NO</button>
+        <button class="btn green" id="yes">YES</button>
+        <button class="btn red" id="no">NO</button>
       </div>
-
-      <!-- 📍 Location Button -->
-      <button onclick="getLocation()" class="btn">📍 Use My Location</button>
-
-      <br /><br />
-      <button id="submitBtn" class="btn submit">SUBMIT</button>
-      <br /><br />
-      <button id="logoutBtn" class="btn">🚪 Logout</button>
+      <input type="hidden" id="lat" />
+      <input type="hidden" id="lng" />
+      <button class="btn submit" id="submitBtn">Submit</button>
     </div>
 
-    <!-- ✅ Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <!-- ✅ Firebase Config and JS -->
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
-
-    <!-- ✅ Logout Button -->
     <script>
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        firebase
-          .auth()
-          .signOut()
-          .then(() => {
-            window.location.href = "login.html";
-          });
-      });
-
-      // 📍 Simple Location Test Trigger
-      function getLocation() {
-        navigator.geolocation.getCurrentPosition(
-          () => {
-            alert("✅ Location detected successfully.");
-          },
-          () => {
-            alert("❌ Location access denied. Please enable GPS.");
-          }
-        );
-      }
+      // 🔐 Your Firebase config here (replace with your actual config)
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MSG_SENDER_ID",
+        appId: "YOUR_APP_ID",
+      };
+      firebase.initializeApp(firebaseConfig);
     </script>
+
+    <script src="script.js"></script>
   </body>
 </html>
